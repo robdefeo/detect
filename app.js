@@ -2,8 +2,9 @@ var
   express = require('express'),
   pos = require('pos'),
   preProcess = require('./lib/preProcess'),
-  colourDetector = require('./lib/colourDetector'),
-  materialDetector = require('./lib/materialDetector')
+  // colourDetector = require('./lib/colourDetector'),
+  disambiguator = require('./lib/entityDisambiguator');
+  // materialDetector = require('./lib/materialDetector')
 
 var app = express();
 
@@ -20,10 +21,10 @@ app.get('/', function(req, res) {
     res.status(412).json({error: "Missing parameter: 'q'"});
   } else {
     preProcess.do(q, function(preResult){
-      colourDetector.do(preResult, function(colourDetectionResult){
+      disambiguator.do(preResult, function(disambiguatorResult){
         res.json({
           tokens: preResult.tokens,
-          detections: colourDetectionResult.detections
+          detections: disambiguatorResult.detections
         });        
       });
     });
