@@ -10,16 +10,15 @@ var app = express();
 
 app.use(express.bodyParser());
 
-
-// app.param('collectionName', function(req, res, next, collectionName){
-//   req.collection = db.collection(collectionName)
-//   return next()
-// })
 app.get('/', function(req, res) {
   var q = req.param('q');
+  res.header("Access-Control-Allow-Origin", "*");
+  // TODO: limit this based on environement or multiple but not *
+  // res.header("Access-Control-Allow-Origin", "http://localhost:5000");
   if (!q){
     res.status(412).json({error: "Missing parameter: 'q'"});
   } else {
+    console.log("received: " + q);
     preProcess.do(q, function(preResult){
       disambiguator.do(preResult, function(disambiguatorResult){
         res.json({
