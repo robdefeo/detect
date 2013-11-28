@@ -22,7 +22,7 @@ app.get('/', function(req, res) {
     preProcess.do(q, function(preResult){
       disambiguator.do(preResult, function(disambiguatorResult){
         res.json({
-          tokens: preResult.tokens,
+          // tokens: preResult.tokens,
           detections: disambiguatorResult.detections
         });        
       });
