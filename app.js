@@ -2,9 +2,8 @@ var
   express = require('express'),
   pos = require('pos'),
   preProcess = require('./lib/preProcess'),
-  // colourDetector = require('./lib/colourDetector'),
   disambiguator = require('./lib/entityDisambiguator');
-  // materialDetector = require('./lib/materialDetector')
+  var pjson = require('./package.json');
 
 var app = express();
 
@@ -23,6 +22,7 @@ app.get('/', function(req, res) {
       disambiguator.do(preResult, function(disambiguatorResult){
         res.json({
           // tokens: preResult.tokens,
+          version: pjson.version,
           detections: disambiguatorResult.detections
         });        
       });
