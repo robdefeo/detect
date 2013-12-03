@@ -51,28 +51,30 @@ app.get('/', function(req, res) {
   res.header("Access-Control-Allow-Origin", "*");
   // TODO: limit this based on environement or multiple but not *
   // res.header("Access-Control-Allow-Origin", "http://localhost:5000");
+    // res.header("Access-Control-Allow-Origin", "http://jemboo.com");
+  console.log("app=detection,module=app,function=get,q=%s", q);
   if (!q) {
     res.status(412).json({error: "Missing parameter: 'q'"});
-  } else {
-    console.log("received: " + q);
-    preProcess.do(q, function(preProcessingResponse){
-      disambiguator.do(preProcessingResponse, function(disambiguatorResponse){
-        res.json({
-          detectionId: detectionId,
-          tokens: preProcessingResponse.tokens,
-          version: pjson.version,
-          detections: disambiguatorResponse.detections,
-          nonDetections: disambiguatorResponse.nonDetections
-        }); 
-        
-        logResponse(detectionId, q, preProcessingResponse, disambiguatorResponse);       
-      });
+  } 
+  
+  preProcess.do(q, function(preProcessingResponse){
+    disambiguator.do(preProcessingResponse, function(disambiguatorResponse){
+      res.json({
+        detectionId: detectionId,
+        tokens: preProcessingResponse.tokens,
+        version: pjson.version,
+        detections: disambiguatorResponse.detections,
+        nonDetections: disambiguatorResponse.nonDetections
+      }); 
+      
+      logResponse(detectionId, q, preProcessingResponse, disambiguatorResponse);       
     });
-  }
+  });
+
 });
 
 
 var port = process.env.PORT || 5001;
 app.listen(port, function() {
-  console.log("Express server listening on port %d in %s mode", port, app.settings.env);
+  console.log("app=detection,port=%d,mode=%s,action=started", port, app.settings.env);
 });
