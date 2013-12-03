@@ -13,7 +13,7 @@ var mongoUri = process.env.MONGOHQ_DETECTION_URL || "mongodb://localhost/detecti
 var logResponse = function(detectionId, q, preProcessingResponse, disambiguatorResponse) {
   mongoClient.connect(mongoUri, function (err, db) {
     if (err) {
-      return console.dir(err);
+      console.err("app=detection,resource=mongo,error=%s", err);
     }
     var data = {
       _id: detectionId,
@@ -30,7 +30,7 @@ var logResponse = function(detectionId, q, preProcessingResponse, disambiguatorR
       },
       function (err, response){
         if (err) {
-          return console.dir(err);
+          console.err("app=detection,resource=mongo,error=%s", err);
         }
     });
   });
