@@ -37,6 +37,7 @@ var logResponse = function(detectionId, q, preProcessingResponse, disambiguatorR
 };
 
 app.use(express.bodyParser());
+app.use(express.compress());
 
 app.get('/status', function(req, res) {
   res.json({
