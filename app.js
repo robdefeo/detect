@@ -10,29 +10,33 @@ var
 var app = express();
 var mongoUri = process.env.MONGOHQ_DETECTION_URL || "mongodb://localhost/detection" 
 
-var logResponse = function(detectionId, q, preProcessingResponse, disambiguatorResponse) {
-  mongoClient.connect(mongoUri, function (err, db) {
-    if (err) {
-      console.err("app=detection,resource=mongo,error=%s", err);
-    }
-    var data = {
-      _id: detectionId,
-      q: q,
-      timestamp: new Date().toISOString(),
-      tokens: preProcessingResponse.tokens,
-      detections: disambiguatorResponse.detections,
-      nonDetections: disambiguatorResponse.nonDetections
-    };
-    db.collection("responses").insert(
-      data,
-      { 
-        safe: true
-      },
-      function (err, response){
-        if (err) {
-          console.err("app=detection,resource=mongo,error=%s", err);
-        }
-    });
+var db;
+mongoClient.connect(mongoUri, function (err, connectDb) {
+  if (err) {
+    console.error("app=detection,resource=mongo,error=%s", err);
+  }
+  db = connectDb;
+});
+
+
+var logResponse = function(detectionId, q, preProcessingResponse, disambiguatorResponse) {  
+  var data = {
+    _id: detectionId,
+    q: q,
+    timestamp: new Date().toISOString(),
+    tokens: preProcessingResponse.tokens,
+    detections: disambiguatorResponse.detections,
+    nonDetections: disambiguatorResponse.nonDetections
+  };
+  db.collection("responses").insert(
+    data,
+    { 
+      safe: true
+    },
+    function (err, response){
+      if (err) {
+        console.err("app=detection,resource=mongo,error=%s", err);
+      }
   });
 };
 
