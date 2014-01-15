@@ -5,8 +5,10 @@ var
   disambiguator = require('./lib/entityDisambiguator'),
   pjson = require('./package.json'),
   uuid = require('uuid'),
-  mongoClient = require('mongodb').MongoClient
-
+  mongoClient = require('mongodb').MongoClient,
+  nodemailer = require("nodemailer")
+  
+  
 var app = express();
 var mongoUri = process.env.MONGOHQ_DETECTION_URL || "mongodb://localhost/detection" 
 
@@ -78,6 +80,51 @@ app.get('/', function(req, res) {
 
 });
 
+app.use(function(err, req, res, next){
+  if (err){
+    var errJson = {error: err.message, stack: err.stack};
+    console.error("app=detection,error=%s", JSON.stringify(errJson));
+    res.send(500, 
+      errJson
+    );
+
+    // create reusable transport method (opens pool of SMTP connections)
+    var smtpTransport = nodemailer.createTransport("SMTP",{
+        service: "Gmail",
+        auth: {
+            user: process.env.MAIL_USER || "admin@jemboo.com",
+            pass: process.env.MAIL_PASSWORD || "none"
+        }
+    });
+
+    // setup e-mail data with unicode symbols
+    var mailOptions = {
+        from: process.env.MAIL_FROM || "errors@jemboo.com", // sender address
+        to: process.env.MAIL_TO || "robdefeo@gmail.com", // list of receivers
+        subject: "Error: dection", // Subject line
+        text: JSON.stringify({
+          error: errJson,
+          request: {
+            headers: req.headers,
+            url: req.url,
+            methond: req.method
+            }
+          }, null, 2)
+        // html: "<b>Hello world ✔</b>" // html body
+    }
+
+    // send mail with defined transport object
+    smtpTransport.sendMail(mailOptions, function(error, response){
+        if(error){
+            console.error(error);
+        }
+        // if you don't want to use this transport object anymore, uncomment following line
+        smtpTransport.close(); // shut down the connection pool, no more messages
+    });
+  }else{
+    next();
+  }
+});
 
 var port = process.env.PORT || 5001;
 app.listen(port, function() {

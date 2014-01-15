@@ -6,5 +6,11 @@ Run from app directory
 ````
 heroku config:set MONGOHQ_GETTER_URL="mongodb://getter:getter@paulo.mongohq.com:10030/getter"
 heroku config:set MONGOHQ_DETECTION_URL="mongodb://detection:detection@linus.mongohq.com:10016/detection"
+
+heroku config:set MAIL_USER="admin@jemboo.com"
+heroku config:set MAIL_PASSWORD="xxxxx"
+heroku config:set MAIL_FROM="errors@jemboo.com"
+heroku config:set MAIL_TO="robdefeo@gmail.com"
+
 ````
 
