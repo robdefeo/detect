@@ -55,33 +55,44 @@ app.get('/status', function(req, res) {
   });
 });
 
-app.get('/', function(req, res) {
-  var q = req.param('q');
-  var detectionId = uuid.v4();
-  res.header("Access-Control-Allow-Origin", "*");
-  // TODO: limit this based on environement or multiple but not *
-  // res.header("Access-Control-Allow-Origin", "http://localhost:5000");
-    // res.header("Access-Control-Allow-Origin", "http://jemboo.com");
-  console.log("app=detection,module=app,function=get,detectionId=%s,sessionID=%s,q=%s", detectionId, req.param('sessionID'), q);
-  if (!q) {
-    res.status(412).json({error: "Missing parameter: 'q'"});
-  } 
-  
-  preProcess.do(q, function(preProcessingResponse){
-    disambiguator.do(preProcessingResponse, vocabLoader, function(disambiguatorResponse){
-      res.json({
-        detectionId: detectionId,
-        tokens: preProcessingResponse.tokens,
-        version: pjson.version,
-        detections: disambiguatorResponse.detections,
-        nonDetections: disambiguatorResponse.nonDetections
-      }); 
-      
-      logResponse(detectionId, req.param('sessionID'),  q, preProcessingResponse, disambiguatorResponse);       
-    });
-  });
+app.get('/',[
+  function(req, res, next) {
+    if (vocabLoader.vocab == undefined){
+      vocabLoader.loadData(function(){
+        next();
+      });
+    }else{
+      next();
+    }
+  }, 
+  function(req, res) {
+    var q = req.param('q');
+    var detectionId = uuid.v4();
+    res.header("Access-Control-Allow-Origin", "*");
+    // TODO: limit this based on environement or multiple but not *
+    // res.header("Access-Control-Allow-Origin", "http://localhost:5000");
+      // res.header("Access-Control-Allow-Origin", "http://jemboo.com");
+    console.log("app=detection,module=app,function=get,detectionId=%s,sessionID=%s,q=%s", detectionId, req.param('sessionID'), q);
+    if (!q) {
+      res.status(412).json({error: "Missing parameter: 'q'"});
+    } 
 
-});
+    preProcess.do(q, function(preProcessingResponse){
+      disambiguator.do(preProcessingResponse, vocabLoader, function(disambiguatorResponse){
+        res.json({
+          detectionId: detectionId,
+          tokens: preProcessingResponse.tokens,
+          version: pjson.version,
+          detections: disambiguatorResponse.detections,
+          nonDetections: disambiguatorResponse.nonDetections
+        }); 
+
+        logResponse(detectionId, req.param('sessionID'),  q, preProcessingResponse, disambiguatorResponse);       
+      });
+    });
+
+  }
+]);
 
 app.use(function(err, req, res, next){
   if (err){
