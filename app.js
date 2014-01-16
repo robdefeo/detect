@@ -6,8 +6,9 @@ var
   pjson = require('./package.json'),
   uuid = require('uuid'),
   mongoClient = require('mongodb').MongoClient,
-  nodemailer = require("nodemailer")
-  
+  nodemailer = require("nodemailer"),
+  _ = require("underscore"),
+  vocabLoader = require('./lib/vocabLoader');
   
 var app = express();
 var mongoUri = process.env.MONGOHQ_DETECTION_URL || "mongodb://localhost/detection" 
@@ -47,7 +48,8 @@ app.use(express.compress());
 
 app.get('/status', function(req, res) {
   res.json({
-    self: "up",
+    self: vocabLoader.status().self,
+    info: vocabLoader.status(),
     version: pjson.version
   });
 });
@@ -65,7 +67,7 @@ app.get('/', function(req, res) {
   } 
   
   preProcess.do(q, function(preProcessingResponse){
-    disambiguator.do(preProcessingResponse, function(disambiguatorResponse){
+    disambiguator.do(preProcessingResponse, vocabLoader, function(disambiguatorResponse){
       res.json({
         detectionId: detectionId,
         tokens: preProcessingResponse.tokens,
