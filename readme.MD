@@ -10,7 +10,7 @@ heroku config:set MONGOHQ_DETECTION_URL="mongodb://detection:detection@linus.mon
 heroku config:set MAIL_USER="admin@jemboo.com"
 heroku config:set MAIL_PASSWORD="xxxxx"
 heroku config:set MAIL_FROM="errors@jemboo.com"
-heroku config:set MAIL_TO="robdefeo@gmail.com"
+heroku config:set MAIL_TO="xxxxx@xxxxx.com"
 
 ````
 

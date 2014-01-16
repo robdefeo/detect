@@ -22,9 +22,10 @@ mongoClient.connect(mongoUri, function (err, connectDb) {
 });
 
 
-var logResponse = function(detectionId, q, preProcessingResponse, disambiguatorResponse) {  
+var logResponse = function(detectionId, sessionID, q, preProcessingResponse, disambiguatorResponse) {  
   var data = {
     _id: detectionId,
+    sessionID: sessionID,
     q: q,
     timestamp: new Date().toISOString(),
     tokens: preProcessingResponse.tokens,
@@ -61,7 +62,7 @@ app.get('/', function(req, res) {
   // TODO: limit this based on environement or multiple but not *
   // res.header("Access-Control-Allow-Origin", "http://localhost:5000");
     // res.header("Access-Control-Allow-Origin", "http://jemboo.com");
-  console.log("app=detection,module=app,function=get,q=%s", q);
+  console.log("app=detection,module=app,function=get,detectionId=%s,sessionID=%s,q=%s", detectionId, req.param('sessionID'), q);
   if (!q) {
     res.status(412).json({error: "Missing parameter: 'q'"});
   } 
@@ -76,7 +77,7 @@ app.get('/', function(req, res) {
         nonDetections: disambiguatorResponse.nonDetections
       }); 
       
-      logResponse(detectionId, q, preProcessingResponse, disambiguatorResponse);       
+      logResponse(detectionId, req.param('sessionID'),  q, preProcessingResponse, disambiguatorResponse);       
     });
   });
 
