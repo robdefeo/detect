@@ -87,29 +87,7 @@ app.get('/',[
       nonDetections: disambiguatorResponse.nonDetections
     });
     logResponse(detectionId, req.param('sessionID'),  q, preProcessingResponse, disambiguatorResponse);       
-        // 
-        // preProcess.do(q, function(preProcessingResponse){
-        //   var disambiguatorResponse = disambiguator.do(preProcessingResponse, vocabLoader);
-        //      
-        //     res.json({
-        //       detectionId: detectionId,
-        //       tokens: preProcessingResponse.tokens,
-        //       version: pjson.version,
-        //       detections: disambiguatorResponse.detections,
-        //       nonDetections: disambiguatorResponse.nonDetections
-        //     });
-        //   disambiguator.do(preProcessingResponse, vocabLoader, function(disambiguatorResponse){
-        //     res.json({
-        //       detectionId: detectionId,
-        //       tokens: preProcessingResponse.tokens,
-        //       version: pjson.version,
-        //       detections: disambiguatorResponse.detections,
-        //       nonDetections: disambiguatorResponse.nonDetections
-        //     }); 
-        // 
-        //     logResponse(detectionId, req.param('sessionID'),  q, preProcessingResponse, disambiguatorResponse);       
-        //   });
-        // });
+    
 
   }
 ]);
