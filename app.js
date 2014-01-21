@@ -57,6 +57,7 @@ app.get('/status', function(req, res) {
 
 app.get('/',[
   function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
     if (vocabLoader.vocab == undefined){
       vocabLoader.loadData(function(){
         next();
@@ -68,7 +69,6 @@ app.get('/',[
   function(req, res) {
     var q = req.param('q');
     var detectionId = uuid.v4();
-    res.header("Access-Control-Allow-Origin", "*");
     // TODO: limit this based on environement or multiple but not *
     // res.header("Access-Control-Allow-Origin", "http://localhost:5000");
       // res.header("Access-Control-Allow-Origin", "http://jemboo.com");
