@@ -11,6 +11,7 @@ var
   vocabLoader = require('./lib/vocabLoader');
   
 var app = express();
+
 var mongoUri = process.env.MONGOHQ_DETECTION_URL || "mongodb://localhost/detection" 
 
 var db;
