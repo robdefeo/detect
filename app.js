@@ -1,4 +1,6 @@
-var 
+var
+  log4js = require('log4js'),
+  logger = log4js.getLogger('app'),
   express = require('express'),
   pos = require('pos'),
   preProcess = require('./lib/preProcess'),
@@ -17,7 +19,7 @@ var mongoUri = process.env.MONGOHQ_DETECTION_URL || "mongodb://localhost/detecti
 var db;
 mongoClient.connect(mongoUri, function (err, connectDb) {
   if (err) {
-    console.error("app=detection,resource=mongo,error=%s", err);
+    logger.error("app=detection,resource=mongo,error=%s", err);
   }
   db = connectDb;
 });
@@ -40,7 +42,7 @@ var logResponse = function(detectionId, sessionID, q, preProcessingResponse, dis
     },
     function (err, response){
       if (err) {
-        console.err("app=detection,resource=mongo,error=%s", err);
+        logger.error("app=detection,resource=mongo,error=%s", err);
       }
   });
 };
@@ -73,7 +75,7 @@ app.get('/',[
     // TODO: limit this based on environement or multiple but not *
     // res.header("Access-Control-Allow-Origin", "http://localhost:5000");
       // res.header("Access-Control-Allow-Origin", "http://jemboo.com");
-    console.log("app=detection,module=app,function=get,detectionId=%s,sessionID=%s,q=%s", detectionId, req.param('sessionID'), q);
+    logger.info("app=detection,module=app,function=get,detectionId=%s,sessionID=%s,q=%s", detectionId, req.param('sessionID'), q);
     if (!q) {
       res.status(412).json({error: "Missing parameter: 'q'"});
     } 
@@ -96,7 +98,7 @@ app.get('/',[
 app.use(function(err, req, res, next){
   if (err){
     var errJson = {error: err.message, stack: err.stack};
-    console.error("app=detection,error=%s", JSON.stringify(errJson));
+    logger.error("app=detection,error=%s", JSON.stringify(errJson));
     res.send(500, 
       errJson
     );
@@ -129,7 +131,7 @@ app.use(function(err, req, res, next){
     // send mail with defined transport object
     smtpTransport.sendMail(mailOptions, function(error, response){
         if(error){
-            console.error(error);
+          logger.error(error);
         }
         // if you don't want to use this transport object anymore, uncomment following line
         smtpTransport.close(); // shut down the connection pool, no more messages
@@ -141,5 +143,5 @@ app.use(function(err, req, res, next){
 
 var port = process.env.PORT || 5001;
 app.listen(port, function() {
-  console.log("app=detection,port=%d,mode=%s,action=started", port, app.settings.env);
+  logger.info("app=detection,port=%d,mode=%s,action=started", port, app.settings.env);
 });
