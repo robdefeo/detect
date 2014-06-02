@@ -1,5 +1,10 @@
 Basically get close to this https://wit.ai/docs/intro but better suited
 
+##Install
+
+Download corpus files
+`python2.7 -m nltk.downloader all`
+
 
 ####Environment variables
 Run from app directory
@@ -13,4 +18,3 @@ dokku config:set detection MAIL_FROM="errors@jemboo.com"
 dokku config:set detection MAIL_TO="xxxxx@xxxxx.com"
 
 ````
-
