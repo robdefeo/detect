@@ -1,11 +1,12 @@
-import preProcess
+import parse
 import vocab
 from flask import Flask, jsonify, request
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
 
-data = {}
+data = vocab.load()
+
 @app.route('/vocab/generate/', methods = ['POST'])
 def vocab_generate():
   vocab.generate()
@@ -39,8 +40,22 @@ def api_root():
     resp.status_code = 412
     return resp
   else:
-    preprocessResult = preProcess.tag(q)
-    resp = jsonify(preprocessResult)
+    preprocessResult = parse.preperation(q)
+    disambiguateResult = parse.disambiguate(data, preprocessResult)
+    print disambiguateResult
+    log = {
+      "detectionId": str(detectionID),
+      "tokens": preprocessResult["tokens"],
+      "detections": disambiguateResult["detections"],
+      "nonDetections": disambiguateResult["nonDetections"]
+    }
+    res = {
+      "detectionId": str(detectionID),
+      # version: pjson.version,
+      "detections": disambiguateResult["detections"],
+      "nonDetections": disambiguateResult["nonDetections"]
+    }
+    resp = jsonify(res)
     resp.status_code = 200
     return resp
 

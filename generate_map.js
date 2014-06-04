@@ -5,7 +5,7 @@ function() {
    if (item["_id"].hasOwnProperty("key")) {
      value = item["_id"]["key"]
    } else {
-     value = item["_id"]["value"]
+     value = item["_id"]["value"].toLowerCase()
    }
 
    emit({

@@ -1,3 +1,4 @@
 flask>=0.10.1
 pyyaml>=3.11
 nltk=>2.0.4
+pymongo>=2.7

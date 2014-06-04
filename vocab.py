@@ -31,16 +31,18 @@ def load():
       if existing_item == None:
         data[data_key].append({
           "type": doc["_id"]["type"],
-          "value": doc["value"]
+          "value": doc["_id"]["value"],
+          "score": doc["value"]
         })
       else:
-        existing_item["value"] = doc["value"]
+        existing_item["score"] = doc["value"]
 
     else:
       data[data_key] = [
         {
           "type": doc["_id"]["type"],
-          "value": doc["value"]
+          "value": doc["_id"]["value"],
+          "score": doc["value"]
         }
       ]
 
