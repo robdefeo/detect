@@ -1,6 +1,7 @@
 import parse
 import vocab
 from flask import Flask, jsonify, request
+from flask.ext.cors import cross_origin
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
@@ -26,6 +27,7 @@ def vocab_load():
   return resp
 
 @app.route('/', methods = ['GET'])
+@cross_origin()
 def api_root():
   q = request.args.get("q")
   sessionID = request.args.get("sessionID")
