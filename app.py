@@ -48,7 +48,8 @@ def api_root():
       disambiguateResult = parse.disambiguate(data, preprocessResult)
       print disambiguateResult
       log = {
-        "detectionId": str(detectionID),
+        "_id": detectionID,
+        "sessionID": sessionID,
         "tokens": preprocessResult["tokens"],
         "detections": disambiguateResult["detections"],
         "nonDetections": disambiguateResult["nonDetections"]
