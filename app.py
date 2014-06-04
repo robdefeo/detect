@@ -4,10 +4,19 @@ import vocab
 from flask import Flask, jsonify
 app = Flask(__name__)
 
-
-@app.route('/generateVocab/', methods = ['POST'])
+data = {}
+@app.route('/vocab/generate/', methods = ['POST'])
 def vocab_generate():
   vocab.generate()
+  resp = jsonify({
+    "status": "ok"
+  })
+  resp.status_code = 200
+  return resp
+
+@app.route('/vocab/load/', methods = ['POST'])
+def vocab_load():
+  data = vocab.load()
   resp = jsonify({
     "status": "ok"
   })
