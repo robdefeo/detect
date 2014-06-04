@@ -1,7 +1,8 @@
 import preProcess
 import vocab
+from flask import Flask, jsonify, request
+from bson.objectid import ObjectId
 
-from flask import Flask, jsonify
 app = Flask(__name__)
 
 data = {}
@@ -25,10 +26,23 @@ def vocab_load():
 
 @app.route('/', methods = ['GET'])
 def api_root():
-  preprocessResult = preProcess.tag("And now for something completely different")
-  resp = jsonify(preprocessResult)
-  resp.status_code = 200
-  return resp
+  q = request.args.get("q")
+  sessionID = request.args.get("sessionID")
+  detectionID = ObjectId()
+
+  print "app=detection,module=app,function=get,detectionId=%s,sessionID=%s,q=%s" % (detectionID, sessionID, q)
+  if not q or not sessionID:
+    resp = jsonify({
+      "status": "error",
+      "message": "missing param(s)"
+    })
+    resp.status_code = 412
+    return resp
+  else:
+    preprocessResult = preProcess.tag(q)
+    resp = jsonify(preprocessResult)
+    resp.status_code = 200
+    return resp
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', debug=True)
