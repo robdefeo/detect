@@ -1,8 +1,18 @@
 import preProcess
+import vocab
+
 from flask import Flask, jsonify
 app = Flask(__name__)
 
 
+@app.route('/generateVocab/', methods = ['POST'])
+def vocab_generate():
+  vocab.generate()
+  resp = jsonify({
+    "status": "ok"
+  })
+  resp.status_code = 200
+  return resp
 
 @app.route('/', methods = ['GET'])
 def api_root():
