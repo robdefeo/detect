@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 data = vocab.load()
 
-@app.route('/vocab/generate/', methods = ['POST'])
+@app.route('/data/generate/', methods = ['POST'])
 def vocab_generate():
   vocab.generate()
   resp = jsonify({
@@ -18,7 +18,7 @@ def vocab_generate():
   resp.status_code = 200
   return resp
 
-@app.route('/vocab/load/', methods = ['POST'])
+@app.route('/data/load/', methods = ['POST'])
 def vocab_load():
   data = vocab.load()
   resp = jsonify({
@@ -29,7 +29,7 @@ def vocab_load():
 
 @app.route('/', methods = ['GET'])
 @cross_origin()
-def api_root():
+def root_get():
   try:
     q = request.args.get("q")
     sessionID = request.args.get("sessionID")
@@ -39,7 +39,10 @@ def api_root():
     if not q or not sessionID:
       resp = jsonify({
         "status": "error",
-        "message": "missing param(s)"
+        "message": "missing param(s)",
+        "q": q,
+        "sessionID": sessionID,
+        "detectionID": detectionID
       })
       resp.status_code = 412
       return resp

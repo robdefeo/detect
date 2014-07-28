@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from settings import MONGO_DB_URI, MONGO_DB_PRODUCT_NAME, MONGO_DB_DETECTION_NAME, MONGO_COLLECTION_VOCAB_NAME
-from bson.code import Code
 from bson.son import SON
+from bson.code import Code
 
 conn = MongoClient(MONGO_DB_URI)
 product_db = conn[MONGO_DB_PRODUCT_NAME]
