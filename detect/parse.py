@@ -40,40 +40,23 @@ def create_found_doc(term, found_item):
         "found_item": found_item
     }
 
-def disambiguate(vocab, preprocess_result):
-
-    from nltk.util import bigrams, trigrams
-
-    found_data = []
-    # unmatched_tokens = dict.fromkeys(set(preprocess_result["tokens"]))
-    # for trigram in trigrams([x["value"] for x in preprocess_result["tokens"]]):
-    found = {}
-    for trigram in trigrams(preprocess_result["tokens"]):
-        # try to match tri gram
-        trigram_term = " ".join(x["value"] for x in trigram if not x["stop_word"])
-        if trigram_term in vocab["en"]:
-            found[trigram_term] = create_found_doc(
-                trigram_term,
-                vocab["en"][trigram_term]
+def find_matches(found, n, tokens, vocab):
+    from nltk.util import ngrams
+    for ngram in ngrams(tokens, n):
+        ngram_term = " ".join(
+            x["value"] for x in ngram if not x["stop_word"])
+        if ngram_term in vocab["en"]:
+            found[ngram_term] = create_found_doc(
+                ngram_term,
+                vocab["en"][ngram_term]
             )
-        else:
-            for bigram in bigrams(trigram):
-                bigram_term = " ".join(
-                    x["value"] for x in bigram if not x["stop_word"])
-                if bigram_term in vocab["en"]:
-                    found[bigram_term] = create_found_doc(
-                        bigram_term,
-                        vocab["en"][bigram_term]
-                    )
-                else:
-                    for gram in bigram:
-                        if not gram["stop_word"]:
-                            term = gram["value"]
-                            if term in vocab["en"]:
-                                found[term] = create_found_doc(
-                                    term,
-                                    vocab["en"][term]
-                                )
+        elif n > 0:
+            found.update(find_matches(found, n-1, tokens, vocab))
+
+    return found
+
+def disambiguate(vocab, preprocess_result):
+    found = find_matches({}, min(len(preprocess_result["tokens"]), 3), preprocess_result["tokens"], vocab)
     unique_values = list(found.values())
     terms_found = [x["term"] for x in unique_values]
     return {
