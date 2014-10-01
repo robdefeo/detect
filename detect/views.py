@@ -17,7 +17,7 @@ ioloop = IOLoop()
 def detect():
     from detect.vocab import alias_data
     try:
-        q = request.args.get("q")
+        original_q = request.args.get("q")
         session_id = request.args.get("session_id")
         detection_id = ObjectId()
 
@@ -39,7 +39,7 @@ def detect():
             resp.status_code = 412
             return resp
 
-        q = q.lower().strip()
+        q = original_q.lower().strip()
 
         preprocess_result = parse.preparation(q)
         disambiguate_result = parse.disambiguate(alias_data, preprocess_result)
@@ -52,7 +52,8 @@ def detect():
             "detections": disambiguate_result["detections"],
             "non_detections": disambiguate_result["non_detections"],
             "version": version,
-            "timestamp": date
+            "timestamp": date,
+            "q": original_q
         }
         Log().write(log)
 
