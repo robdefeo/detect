@@ -7,7 +7,6 @@ from tornado.ioloop import IOLoop
 __author__ = 'robdefeo'
 import logging
 from flask import Blueprint, jsonify, request
-from flask.ext.cors import cross_origin
 from bson.objectid import ObjectId
 import parse
 import traceback
@@ -18,7 +17,6 @@ LOGGER = logging.getLogger(__name__)
 ioloop = IOLoop()
 
 @mod_detect.route('/')
-@cross_origin()
 def detect():
     from detect.vocab import alias_data
     try:
