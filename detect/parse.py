@@ -34,9 +34,10 @@ def get_item(vocab, tokens):
     else:
         return None
 
-def create_found_doc(term, found_item):
+def create_found_doc(term, tokens, found_item):
     return {
         "term": term,
+        "tokens": tokens,
         "found_item": found_item
     }
 
@@ -48,6 +49,7 @@ def find_matches(found, n, tokens, vocab):
         if ngram_term in vocab["en"]:
             found[ngram_term] = create_found_doc(
                 ngram_term,
+                [x["value"] for x in ngram],
                 vocab["en"][ngram_term]
             )
         elif n > 0:
@@ -58,9 +60,16 @@ def find_matches(found, n, tokens, vocab):
 def disambiguate(vocab, preprocess_result):
     found = find_matches({}, min(len(preprocess_result["tokens"]), 3), preprocess_result["tokens"], vocab)
     unique_values = list(found.values())
-    terms_found = [x["term"] for x in unique_values]
+    # terms_found = [x["term"] for x in unique_values]
+    terms_found = []
+    for x in found.values():
+        for y in x["tokens"]:
+            terms_found.append(y)
+    unique_terms_found = list(set(terms_found))
+    [item for sublist in terms_found for item in terms_found]
+    # [item for sublist in unique_values for item in unique_values]
     return {
         "detections": [x["found_item"] for x in unique_values],
-        "non_detections": [x["value"] for x in preprocess_result["tokens"] if not x["stop_word"] and x["value"] not in terms_found]
+        "non_detections": [x["value"] for x in preprocess_result["tokens"] if not x["stop_word"] and x["value"] not in unique_terms_found]
     }
 

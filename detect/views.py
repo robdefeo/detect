@@ -1,3 +1,9 @@
+from detect.settings import MONGODB_USER, MONGODB_PASSWORD, MONGODB_HOST, \
+    MONGODB_DB
+from motor import MotorClient
+from tornado import gen
+from tornado.ioloop import IOLoop
+
 __author__ = 'robdefeo'
 import logging
 from flask import Blueprint, jsonify, request
@@ -5,14 +11,16 @@ from flask.ext.cors import cross_origin
 from bson.objectid import ObjectId
 import parse
 import traceback
+from log import Log
 # Define the blueprint: 'detect', set its url prefix: app.url/
 mod_detect = Blueprint('detect', __name__, url_prefix='/')
 LOGGER = logging.getLogger(__name__)
+ioloop = IOLoop()
 
 @mod_detect.route('/')
 @cross_origin()
 def detect():
-    from detect.data import alias_data
+    from detect.vocab import alias_data
     try:
         q = request.args.get("q")
         session_id = request.args.get("session_id")
@@ -36,9 +44,11 @@ def detect():
             resp.status_code = 412
             return resp
 
+        q = q.lower().strip()
+
         preprocess_result = parse.preparation(q)
         disambiguate_result = parse.disambiguate(alias_data, preprocess_result)
-        print disambiguate_result
+
         log = {
             "_id": detection_id,
             "session_id": session_id,
@@ -46,11 +56,17 @@ def detect():
             "detections": disambiguate_result["detections"],
             "non_detections": disambiguate_result["non_detections"]
         }
+        # ioloop.stop()
+        Log().write(log)
+        # ioloop.start()
+        # IOLoop.instance().start()
+        # IOLoop.instance().stop()
+
         res = {
             "detection_id": str(detection_id),
-            # version: pjson.version,
             "detections": disambiguate_result["detections"],
-            "non_detections": disambiguate_result["non_detections"]
+            "non_detections": disambiguate_result["non_detections"],
+            "version": "1.0.0"
         }
         resp = jsonify(res)
         resp.status_code = 200

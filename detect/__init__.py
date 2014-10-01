@@ -7,14 +7,12 @@ app = Flask(__name__)
 
 from detect.container import Container
 container = Container()
-from detect.data import Data
+from detect.vocab import Vocab
 
-data = Data(container=container)
-print "loadeding! ****************"
-data.generate()
-data.load()
+vocab = Vocab(container=container)
+vocab.generate()
+vocab.load()
 
-from detect.data import alias_data
+from detect.vocab import alias_data
 from detect.views import mod_detect
-mod_detect.test  = "lkjhgfhj"
 app.register_blueprint(mod_detect)

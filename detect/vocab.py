@@ -4,7 +4,7 @@ import logging
 alias_data = None
 
 
-class Data(object):
+class Vocab(object):
     def __init__(self, container=None):
         self.container = container
         self.LOGGER = logging.getLogger(__name__)
@@ -17,6 +17,7 @@ class Data(object):
         if self.container is None:
             self.create_container()
 
+        self.LOGGER.warn("generating data")
         self.container.data_attribute.map_reduce_aliases(
             [
                 "color", "brand", "material", "theme", "style"
@@ -27,6 +28,7 @@ class Data(object):
         if self.container is None:
             self.create_container()
 
+        self.LOGGER.warn("loading data")
         raw_data = self.container.data_attribute_alias.find_all()
         new_alias_data = {
             "en": {}
