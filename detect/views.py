@@ -1,7 +1,3 @@
-from detect.settings import MONGODB_USER, MONGODB_PASSWORD, MONGODB_HOST, \
-    MONGODB_DB
-from motor import MotorClient
-from tornado import gen
 from tornado.ioloop import IOLoop
 
 __author__ = 'robdefeo'
@@ -11,6 +7,7 @@ from bson.objectid import ObjectId
 import parse
 import traceback
 from log import Log
+from datetime import datetime
 # Define the blueprint: 'detect', set its url prefix: app.url/
 mod_detect = Blueprint('detect', __name__, url_prefix='/')
 LOGGER = logging.getLogger(__name__)
@@ -46,25 +43,26 @@ def detect():
 
         preprocess_result = parse.preparation(q)
         disambiguate_result = parse.disambiguate(alias_data, preprocess_result)
-
+        date = datetime.now().isoformat()
+        version = "1.0.0"
         log = {
             "_id": detection_id,
             "session_id": session_id,
             "tokens": preprocess_result["tokens"],
             "detections": disambiguate_result["detections"],
-            "non_detections": disambiguate_result["non_detections"]
+            "non_detections": disambiguate_result["non_detections"],
+            "version": version,
+            "timestamp": date
         }
-        # ioloop.stop()
         Log().write(log)
-        # ioloop.start()
-        # IOLoop.instance().start()
-        # IOLoop.instance().stop()
 
         res = {
             "detection_id": str(detection_id),
             "detections": disambiguate_result["detections"],
             "non_detections": disambiguate_result["non_detections"],
-            "version": "1.0.0"
+            "version": version,
+            "timestamp": date
+
         }
         resp = jsonify(res)
         resp.status_code = 200
