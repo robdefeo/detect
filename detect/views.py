@@ -25,14 +25,23 @@ def detect():
             "app=detection,function=detect,detection_id=%s,session_id=%s,q=%s",
             detection_id,
             session_id,
-            q
+            original_q
         )
 
-        if not q or not session_id:
+        if not original_q:
             resp = jsonify({
                 "status": "error",
                 "message": "missing param(s)",
-                "q": q,
+                "q": original_q,
+                "detection_id": str(detection_id)
+            })
+            resp.status_code = 412
+            return resp
+
+        if not session_id:
+            resp = jsonify({
+                "status": "error",
+                "message": "missing param(s)",
                 "session_id": str(session_id),
                 "detection_id": str(detection_id)
             })
