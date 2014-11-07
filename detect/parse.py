@@ -66,10 +66,9 @@ def disambiguate(vocab, preprocess_result):
         for y in x["tokens"]:
             terms_found.append(y)
     unique_terms_found = list(set(terms_found))
-    [item for sublist in terms_found for item in terms_found]
-    # [item for sublist in unique_values for item in unique_values]
+    # [item for sublist in terms_found for item in terms_found]
     return {
         "detections": [x["found_item"] for x in unique_values],
-        "non_detections": [x["value"] for x in preprocess_result["tokens"] if not x["stop_word"] and x["value"] not in unique_terms_found]
+        "non_detections": [[x["value"] for x in preprocess_result["tokens"] if not x["stop_word"] and x["value"] not in unique_terms_found and x["pos"][0] in ["J", "N"]]]
     }
 

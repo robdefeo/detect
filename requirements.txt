@@ -1,6 +1,6 @@
-pymongo==2.7.1
+pymongo>=2.7.2
 flask>=0.10.1
 nltk>=2.0.4
-motor>=0.3.2
+motor>=0.3.3
 tornado>=4.0
 numpy>=1.9.0
