@@ -45,4 +45,7 @@ class Vocab(object):
 
         global alias_data
         alias_data = new_alias_data
+        new_alias_data["en"]["hearts"] = {
+            u'type': u'interest', u'key': u'heart'
+        }
         return new_alias_data
