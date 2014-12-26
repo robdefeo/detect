@@ -41,11 +41,17 @@ class Vocab(object):
                 )
 
             if x["_id"]["language"] in ["en"]:
-                new_alias_data["en"][x["_id"]["value"]] = x["value"]["_ids"][0]
+                new_alias_data["en"][x["_id"]["value"]] = {
+                    "type": x["value"]["_ids"][0]["type"],
+                    "key": x["value"]["_ids"][0]["key"],
+                    "source": "content"
+                }
 
         global alias_data
         alias_data = new_alias_data
         new_alias_data["en"]["hearts"] = {
-            u'type': u'interest', u'key': u'heart'
+            'type': 'interest',
+            'key': 'heart',
+            'source': 'context'
         }
         return new_alias_data
