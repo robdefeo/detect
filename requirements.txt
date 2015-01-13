@@ -4,3 +4,4 @@ nltk>=2.0.4
 motor>=0.3.3
 tornado>=4.0
 numpy>=1.9.0
+mock>=1.0.1

@@ -2,7 +2,22 @@ import nltk
 from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
 
+extra_stop_words = [
+    "show"
+]
 stopwords = stopwords.words('english')
+stopwords.extend(extra_stop_words)
+skip_words = [
+    "all",
+    "any",
+    "anything",
+    "display",
+    "every",
+    "everything",
+    "show",
+    "some",
+    "something"
+]
 stemmer = PorterStemmer()
 
 
@@ -10,18 +25,20 @@ def preparation(q):
     result = {
         "q": q.lower()
     }
-    raw_tokens = nltk.word_tokenize(q)
+    raw_tokens = nltk.word_tokenize(q.lower())
     tagged_words = nltk.pos_tag(raw_tokens)
 
     result["tokens"] = []
     for idx, val in enumerate(raw_tokens):
-        stopWord = val in stopwords
+        stop_word = val in stopwords
+        skip_word = val in skip_words
         result["tokens"].append({
             "value": val,
             "pos": tagged_words[idx][1],
-            "use": tagged_words[idx][1][0] in ["J", "N", "V"] and not stopWord,
+            "use": tagged_words[idx][1][0] in ["J", "N", "V"] and not stop_word and not skip_word,
             "stem": stemmer.stem(val),
-            "stop_word": stopWord
+            "stop_word": stop_word,
+            "skip_word": skip_word
         })
 
     return result
@@ -70,6 +87,6 @@ def disambiguate(vocab, preprocess_result):
     not_women_shoes = [x["found_item"] for x in unique_values if not (x["found_item"]["type"] == "style" and (x["found_item"]["key"] == "shoe" or x["found_item"]["key"] == "women"))]
     return {
         "detections": not_women_shoes,
-        "non_detections": [x["value"] for x in preprocess_result["tokens"] if not x["stop_word"] and x["value"] not in unique_terms_found and x["pos"][0] in ["J", "N"]]
+        "non_detections": [x["value"] for x in preprocess_result["tokens"] if x["use"] and x["value"] not in unique_terms_found and x["pos"][0] in ["J", "N"]]
     }
 
