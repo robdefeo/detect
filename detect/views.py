@@ -13,6 +13,13 @@ mod_detect = Blueprint('detect', __name__, url_prefix='/')
 LOGGER = logging.getLogger(__name__)
 ioloop = IOLoop()
 
+@mod_detect.route('proxy.html')
+def proxy():
+    return """
+<!DOCTYPE HTML>
+<script src="//cdn.rawgit.com/jpillora/xdomain/0.6.17/dist/xdomain.min.js" master="*"></script>
+    """
+
 @mod_detect.route('/')
 def detect():
     from detect.vocab import alias_data

@@ -58,6 +58,7 @@ def create_found_doc(term, tokens, found_item):
         "found_item": found_item
     }
 
+
 def find_matches(found, n, tokens, vocab):
     from nltk.util import ngrams
     for ngram in ngrams(tokens, n):
@@ -73,6 +74,7 @@ def find_matches(found, n, tokens, vocab):
             found.update(find_matches(found, n-1, tokens, vocab))
 
     return found
+
 
 def disambiguate(vocab, preprocess_result):
     found = find_matches({}, min(len(preprocess_result["tokens"]), 3), preprocess_result["tokens"], vocab)
