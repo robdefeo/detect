@@ -14,9 +14,11 @@ skip_words = [
     "display",
     "every",
     "everything",
+    "find",
     "show",
     "some",
-    "something"
+    "something",
+    "want"
 ]
 stemmer = PorterStemmer()
 
