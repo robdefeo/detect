@@ -20,7 +20,7 @@ class Vocab(object):
         self.LOGGER.warn("generating data")
         self.container.data_attribute.map_reduce_aliases(
             [
-                "color", "brand", "material", "theme", "style"
+                "color", "brand", "material", "theme", "style", "detail"
             ]
         )
 
