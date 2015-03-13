@@ -8,7 +8,7 @@ from tornado.escape import json_encode
 from tornado.web import asynchronous
 
 import detect.parse as parse
-from detect.workers.worker import Worker
+from detect.workers.worker1 import Worker
 
 
 class Detect(RequestHandler):

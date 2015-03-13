@@ -11,8 +11,8 @@ setup(
     packages=[
         'detect',
         'detect.data',
-        'detect.workers',
-        'detect.handlers'
+        'detect.handlers',
+        'detect.workers'
     ],
     install_requires=required
 )
