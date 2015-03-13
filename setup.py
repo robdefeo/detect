@@ -12,6 +12,7 @@ setup(
         'detect',
         'detect.data',
         'detect.workers',
+        'detect.workers.worker',
         'detect.handlers'
     ],
     install_requires=required
