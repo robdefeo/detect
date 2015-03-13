@@ -7,12 +7,11 @@ with open('requirements.txt') as f:
 
 setup(
     name='detect',
-    version='0.0.3',
+    version='0.0.4',
     packages=[
         'detect',
         'detect.data',
         'detect.workers',
-        'detect.workers.worker',
         'detect.handlers'
     ],
     install_requires=required
