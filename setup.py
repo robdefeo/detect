@@ -6,8 +6,8 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(
-    name='getter',
-    version='0.0.2',
+    name='detect',
+    version='0.0.3',
     packages=[
         'detect',
         'detect.data',
