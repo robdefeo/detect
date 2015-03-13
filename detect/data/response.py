@@ -1,17 +1,18 @@
 __author__ = 'robdefeo'
 import logging
-from prproc.data.data import Data
+from detect.data.data import Data
 from copy import deepcopy
 from bson.code import Code
 from bson.son import SON
 from time import time
 
+
 class Response(Data):
     LOGGER = logging.getLogger(__name__)
-    collection = None
+    collection_name = "responses"
 
-    def open_connection(self):
-        self.collection = self.create_db().responses
+    def insert(self, data):
+        self.collection.insert(data)
 
     def map_reduce_typeahead(self):
         mapper = Code("""
