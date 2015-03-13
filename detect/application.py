@@ -5,13 +5,15 @@ import tornado.options
 from tornado.web import url
 from detect.handlers.detect import Detect
 from detect.handlers.proxy import Proxy
+from detect.handlers.status import Status
 
 
 class Application(tornado.web.Application):
     def __init__(self, vocab):
         handlers = [
             url(r"/", Detect, dict(vocab=vocab), name="detect"),
-            url(r"/proxy.html", Proxy, name="proxy")
+            url(r"/proxy.html", Proxy, name="proxy"),
+            url(r"/status", Status, name="status")
         ]
 
         settings = dict(
