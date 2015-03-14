@@ -1,7 +1,8 @@
 import threading
 import slack
 import slack.chat
-from detect.settings import SLACK_API_TOKEN
+from detect.settings import SLACK_API_TOKEN, ENABLE_MONGO_LOG
+from tornado.log import app_log
 
 
 class Worker(threading.Thread):
@@ -11,11 +12,14 @@ class Worker(threading.Thread):
         self.log = log
 
     def write_to_mongo(self):
-        from detect.data.response import Response
-        data_response = Response()
-        data_response.open_connection()
-        data_response.insert(self.log)
-        data_response.close_connection()
+        if ENABLE_MONGO_LOG:
+            from detect.data.response import Response
+            data_response = Response()
+            data_response.open_connection()
+            data_response.insert(self.log)
+            data_response.close_connection()
+        else:
+            app_log.warn("Mongo is not enabled")
 
     def run(self):
         self.write_to_mongo()

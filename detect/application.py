@@ -10,8 +10,9 @@ from detect.handlers.status import Status
 
 class Application(tornado.web.Application):
     def __init__(self, vocab):
+        from detect.parse import Parse
         handlers = [
-            url(r"/", Detect, dict(vocab=vocab), name="detect"),
+            url(r"/", Detect, dict(parse=Parse()), name="detect"),
             url(r"/proxy.html", Proxy, name="proxy"),
             url(r"/status", Status, name="status")
         ]

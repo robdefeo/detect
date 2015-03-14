@@ -1,14 +1,114 @@
+__author__ = 'robdefeo'
 import unittest
+from detect.parse import Parse as Target
 
-from detect.parse import preparation
+
+class find_matches_Tests(unittest.TestCase):
+    def test_single_term(self):
+        target = Target()
+        actual = target.find_matches(
+            {},
+            3,
+            [
+                {
+                    'pos': 'VBD',
+                    'stem': u'red',
+                    'stop_word': False,
+                    'skip_word': False,
+                    'use': True,
+                    'value': 'red'
+                },
+                {
+                    'pos': 'NN',
+                    'stem': u'heel',
+                    'stop_word': False,
+                    'skip_word': False,
+                    'use': True,
+                    'value': 'heel'
+                }
+            ],
+            {
+                "en": {
+                    "red": "red",
+                    "heel": "heel"
+                }
+            }
+        )
+
+        self.assertDictEqual(
+            actual,
+            {
+                'red': {'found_item': 'red', 'term': 'red', 'tokens': ['red']},
+                'heel': {'found_item': 'heel', 'term': 'heel', 'tokens': ['heel']}
+            }
+        )
+
+    def test_multiple_term(self):
+        target = Target()
+        actual = target.find_matches(
+            {},
+            3,
+            [
+                {
+                    'pos': 'VBD',
+                    'stem': u'red',
+                    'stop_word': False,
+                    'skip_word': False,
+                    'use': True,
+                    'value': 'red'
+                },
+                {
+                    'pos': 'NN',
+                    'stem': u'valentino',
+                    'stop_word': False,
+                    'skip_word': False,
+                    'use': True,
+                    'value': 'valentino'
+                }
+            ],
+            {
+                "en": {
+                    "red": "red",
+                    "red valentino": "red valentino"
+                }
+            }
+        )
+
+        self.assertDictEqual(
+            actual,
+            {
+                'red valentino': {'found_item': 'red valentino', 'term': 'red valentino', 'tokens': ['red', 'valentino']}
+            }
+        )
+
+
+class create_found_doc_Tests(unittest.TestCase):
+    maxDiff = None
+
+    def test_regular(self):
+        target = Target()
+        actual = target.create_found_doc(
+            "terms_value",
+            "tokens_value",
+            "found_item_value"
+        )
+
+        self.assertDictEqual(
+            actual,
+            {
+                "term": "terms_value",
+                "tokens": "tokens_value",
+                "found_item": "found_item_value"
+            }
+        )
 
 
 class preperation_Tests(unittest.TestCase):
     maxDiff = None
 
     def test_empty_string(self):
-        target = preparation
-        actual = target("")
+        target = Target()
+        actual = target.preparation("")
         self.assertDictEqual(
             actual,
             {
@@ -18,8 +118,8 @@ class preperation_Tests(unittest.TestCase):
         )
 
     def test_has_uppercase_elements(self):
-        target = preparation
-        actual = target("Red HEEL")
+        target = Target()
+        actual = target.preparation("Red HEEL")
         self.assertDictEqual(
             actual,
             {
@@ -46,8 +146,8 @@ class preperation_Tests(unittest.TestCase):
         )
 
     def test_has_stopwords(self):
-        target = preparation
-        actual = target("Shoes with red and white")
+        target = Target()
+        actual = target.preparation("Shoes with red and white")
         self.assertDictEqual(
             actual,
             {
@@ -94,8 +194,8 @@ class preperation_Tests(unittest.TestCase):
         )
 
     def test_has_skipwords(self):
-        target = preparation
-        actual = target("Show me anything")
+        target = Target()
+        actual = target.preparation("Show me anything")
         self.assertDictEqual(
             actual,
             {

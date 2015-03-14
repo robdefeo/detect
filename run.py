@@ -15,7 +15,7 @@ vocab = Vocab(container=container)
 vocab.generate()
 vocab.load()
 
-from detect.vocab import alias_data
+# from detect.vocab import alias_data
 
 from detect.settings import PORT
 tornado.options.define('port', type=int, default=PORT, help='server port number (default: 9000)')

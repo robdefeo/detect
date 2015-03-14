@@ -1,6 +1,5 @@
 __author__ = 'robdefeo'
 import logging
-
 alias_data = None
 
 

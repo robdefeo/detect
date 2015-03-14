@@ -7,13 +7,12 @@ from bson.objectid import ObjectId
 from tornado.escape import json_encode
 from tornado.web import asynchronous
 
-import detect.parse as parse
 from detect.workers.worker import Worker
 
 
 class Detect(RequestHandler):
-    def initialize(self, vocab):
-        self.vocab = vocab
+    def initialize(self, parse):
+        self.parse = parse
 
     def on_finish(self):
         pass
@@ -62,8 +61,8 @@ class Detect(RequestHandler):
             else:
                 q = original_q.lower().strip()
 
-                preprocess_result = parse.preparation(q)
-                disambiguate_result = parse.disambiguate(alias_data, preprocess_result)
+                preprocess_result = self.parse.preparation(q)
+                disambiguate_result = self.parse.disambiguate(alias_data, preprocess_result)
                 date = datetime.now().isoformat()
                 version = "1.0.0"
 
@@ -106,15 +105,3 @@ class Detect(RequestHandler):
             )
         finally:
             pass
-            # import time
-            # time.sleep(10)
-            # print("waited10secs")
-            # print("lkjhkgjfhhjjk")
-
-
-            # TODO
-            # self.write("this is story %s")
-
-    def worker_done(self, value):
-        print("kjhgjfh")
-        pass
