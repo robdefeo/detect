@@ -23,34 +23,94 @@ class Vocab(object):
             ]
         )
 
-    def load(self):
+    def get_from_database(self):
         if self.container is None:
             self.create_container()
 
         self.LOGGER.warn("loading data")
-        raw_data = self.container.data_attribute_alias.find_all()
-        new_alias_data = {
-            "en": {}
-        }
-        for x in raw_data:
-            if len(x["value"]["_ids"]) != 1:
-                self.LOGGER.warning(
-                    "multiple_ids,alias=%s",
-                    x["_id"]
-                )
+        return self.container.data_attribute_alias.find_all()
 
-            if x["_id"]["language"] in ["en"]:
-                new_alias_data["en"][x["_id"]["value"]] = {
-                    "type": x["value"]["_ids"][0]["type"],
-                    "key": x["value"]["_ids"][0]["key"],
-                    "source": "content"
-                }
+    def generate_empty_structure(self, languages):
+        new_alias_data = {}
+        for x in languages:
+            new_alias_data[x] = {}
+
+        return new_alias_data
+
+    def create_value(self, value_type, key, display_name, source, match_type):
+        return {
+            "type": value_type,
+            "key": key,
+            "display_name": display_name,
+            "source": source,
+            "match_type": match_type
+        }
+
+    def add_value(self, data, language, key, value):
+        if key in data[language]:
+            self.LOGGER.warning(
+                "multiple_ids,alias=%s,value=%s",
+                key,
+                value
+            )
+            data[language][key].append(value)
+        else:
+            data[language][key] = [value]
+
+    def add_hearts(self, data):
+        self.add_value(
+            data,
+            "en",
+            "hearts",
+            self.create_value(
+                "interest",
+                "heart",
+                "heart",
+                "context",
+                "alias"
+            )
+        )
+
+    def load(self, languages):
+        attribute_data = self.get_from_database()
+        new_alias_data = self.generate_empty_structure(languages)
+
+        for attribute in attribute_data:
+            for language in languages:
+                # loop aliaes
+                for alias in (x["value"] for x in attribute["aliases"] if x["language"] == language):
+                    self.add_value(
+                        new_alias_data,
+                        language,
+                        alias,
+                        self.create_value(
+                            attribute["_id"]["type"],
+                            attribute["_id"]["key"],
+                            attribute["display_name"] if "display_name" in attribute and attribute["display_name"] else attribute["_id"]["key"],
+                            "content",
+                            "alias"
+                        )
+                    )
+
+                if "spellings" in attribute:
+                    for spelling in (x["value"] for x in attribute["spellings"] if x["language"] == language):
+                        self.add_value(
+                            new_alias_data,
+                            language,
+                            spelling,
+                            self.create_value(
+                                attribute["_id"]["type"],
+                                attribute["_id"]["key"],
+                                attribute["display_name"] if "display_name" in attribute and attribute["display_name"] else attribute["_id"]["key"],
+                                "content",
+                                "spelling"
+                            )
+                        )
 
         global alias_data
+        self.add_hearts(
+            new_alias_data
+        )
         alias_data = new_alias_data
-        new_alias_data["en"]["hearts"] = {
-            'type': 'interest',
-            'key': 'heart',
-            'source': 'context'
-        }
         return new_alias_data
+

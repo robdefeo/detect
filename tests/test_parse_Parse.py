@@ -29,8 +29,8 @@ class find_matches_Tests(unittest.TestCase):
             ],
             {
                 "en": {
-                    "red": "red",
-                    "heel": "heel"
+                    "red": {"key": "red", "type": "color", "source": "content"},
+                    "heel": {"key": "heel", "type": "style", "source": "content"}
                 }
             }
         )
@@ -38,8 +38,24 @@ class find_matches_Tests(unittest.TestCase):
         self.assertDictEqual(
             actual,
             {
-                'red': {'found_item': 'red', 'term': 'red', 'tokens': ['red']},
-                'heel': {'found_item': 'heel', 'term': 'heel', 'tokens': ['heel']}
+                'red': {
+                    'found_item': {
+                        'key': 'red',
+                        'source': 'content',
+                        'type': 'color'
+                    },
+                    'term': 'red',
+                    'tokens': ['red']
+                },
+                'heel': {
+                    'found_item': {
+                        'key': 'heel',
+                        'source': 'content',
+                        'type': 'style'
+                    },
+                    'term': 'heel',
+                    'tokens': ['heel']
+                }
             }
         )
 
@@ -68,8 +84,8 @@ class find_matches_Tests(unittest.TestCase):
             ],
             {
                 "en": {
-                    "red": "red",
-                    "red valentino": "red valentino"
+                    "red": {"key": "red", "type": "color", "source": "content"},
+                    "red valentino": {"key": "red valentino", "type": "brand", "source": "content"}
                 }
             }
         )
@@ -77,7 +93,15 @@ class find_matches_Tests(unittest.TestCase):
         self.assertDictEqual(
             actual,
             {
-                'red valentino': {'found_item': 'red valentino', 'term': 'red valentino', 'tokens': ['red', 'valentino']}
+                'red valentino': {
+                    'found_item': {
+                        'key': 'red valentino',
+                        'source': 'content',
+                        'type': 'brand'
+                    },
+                    'term': 'red valentino',
+                    'tokens': ['red', 'valentino']
+                }
             }
         )
 
