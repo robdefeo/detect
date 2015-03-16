@@ -1,21 +1,15 @@
 __author__ = 'robdefeo'
-import sys
-
 import tornado
 import tornado.options
 from tornado.httpserver import HTTPServer
-import tornado.ioloop
+from tornado.ioloop import IOLoop
 from detect.application import Application
-
 from detect.container import Container
-container = Container()
 from detect.vocab import Vocab
 
+container = Container()
 vocab = Vocab(container=container)
-vocab.generate()
 vocab.load()
-
-# from detect.vocab import alias_data
 
 from detect.settings import PORT
 tornado.options.define('port', type=int, default=PORT, help='server port number (default: 9000)')
@@ -26,4 +20,4 @@ if __name__ == "__main__":
     tornado.options.parse_command_line()
     http_server = HTTPServer(Application(vocab))
     http_server.listen(tornado.options.options.port)
-    tornado.ioloop.IOLoop.instance().start()
+    IOLoop.instance().start()

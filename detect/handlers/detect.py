@@ -59,9 +59,7 @@ class Detect(RequestHandler):
                 )
 
             else:
-                q = original_q.lower().strip()
-
-                preprocess_result = self.parse.preparation(q)
+                preprocess_result = self.parse.preparation(original_q)
                 disambiguate_result = self.parse.disambiguate(alias_data, preprocess_result)
                 date = datetime.now().isoformat()
                 version = "1.0.0"

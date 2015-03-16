@@ -12,23 +12,16 @@ class Vocab(object):
         from detect.container import Container
         self.container = Container()
 
-    def generate(self):
-        if self.container is None:
-            self.create_container()
-
-        self.LOGGER.warn("generating data")
-        self.container.data_attribute.map_reduce_aliases(
-            [
-                "color", "brand", "material", "theme", "style", "detail", "season"
-            ]
-        )
-
     def get_from_database(self):
         if self.container is None:
             self.create_container()
 
         self.LOGGER.warn("loading data")
-        return self.container.data_attribute_alias.find_all()
+        return self.container.find_for_detection(
+            [
+                "color", "brand", "material", "theme", "style", "detail", "season"
+            ]
+        )
 
     def generate_empty_structure(self, languages):
         new_alias_data = {}
