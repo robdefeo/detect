@@ -17,7 +17,7 @@ class Vocab(object):
             self.create_container()
 
         self.LOGGER.warn("loading data")
-        return self.container.find_for_detection(
+        return self.container.data_attribute.find_for_detection(
             [
                 "color", "brand", "material", "theme", "style", "detail", "season"
             ]
@@ -41,12 +41,13 @@ class Vocab(object):
 
     def add_value(self, data, language, key, value):
         if key in data[language]:
+            data[language][key].append(value)
             self.LOGGER.warning(
                 "multiple_ids,alias=%s,value=%s",
                 key,
-                value
+                data[language][key]
             )
-            data[language][key].append(value)
+
         else:
             data[language][key] = [value]
 

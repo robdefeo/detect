@@ -1,7 +1,341 @@
 __author__ = 'robdefeo'
 import unittest
-
+from operator import itemgetter
 from detect.parse import Parse as Target
+
+
+class unique_non_detections_Tests(unittest.TestCase):
+    maxDiff = None
+
+    def test_empty_can_not_match(self):
+        target = Target()
+        actual = target.unique_non_detections([])
+
+        self.assertListEqual(
+            actual,
+            []
+        )
+
+    def test_non_duplicates(self):
+        target = Target()
+        actual = target.unique_non_detections(
+            [
+                {
+                    'value': 'citrus',
+                    'start': 0,
+                    'skip_word': False,
+                    'stop_word': False,
+                    'stem': 'citrus',
+                    'end': 5,
+                    'use': True,
+                    'pos': 'NN'
+                },
+                {
+                    'value': 'heel',
+                    'start': 5,
+                    'skip_word': False,
+                    'stop_word': False,
+                    'stem': 'heel',
+                    'end': 10,
+                    'use': True,
+                    'pos': 'NN'
+                }
+            ]
+        )
+
+        self.assertSetEqual(
+            set(actual),
+            set(['heel', 'citrus'])
+        )
+
+    def test_duplicates(self):
+        target = Target()
+        actual = target.unique_non_detections(
+            [
+                {
+                    'value': 'citrus',
+                    'start': 0,
+                    'skip_word': False,
+                    'stop_word': False,
+                    'stem': 'citrus',
+                    'end': 5,
+                    'use': True,
+                    'pos': 'NN'
+                },
+                {
+                    'value': 'heel',
+                    'start': 5,
+                    'skip_word': False,
+                    'stop_word': False,
+                    'stem': 'heel',
+                    'end': 10,
+                    'use': True,
+                    'pos': 'NN'
+                },
+                {
+                    'value': 'citrus',
+                    'start': 15,
+                    'skip_word': False,
+                    'stop_word': False,
+                    'stem': 'citrus',
+                    'end': 20,
+                    'use': True,
+                    'pos': 'NN'
+                }
+            ]
+        )
+
+        self.assertSetEqual(
+            set(actual),
+            set(['heel', 'citrus'])
+        )
+
+class unique_matches_Tests(unittest.TestCase):
+    maxDiff = None
+
+    def test_no_duplicates(self):
+        target = Target()
+        actual = target.unique_matches(
+            [
+                {
+                    'found_item': [
+                        {
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'color'
+                        }
+                    ],
+                    'start': 0,
+                    'end': 6,
+                    'term': 'citrus',
+                    'tokens': ['citrus']
+                },
+                {
+                    'found_item': [
+                        {
+                            'display_name': 'high heels',
+                            'key': 'high heels',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'style'
+                        }
+                    ],
+                    'start': 10,
+                    'end': 16,
+                    'term': 'high heels',
+                    'tokens': ['high heels']
+                }
+            ]
+        )
+
+        self.assertEqual(
+            len(actual),
+            2
+        )
+        self.assertTrue(
+            {
+                'source': 'content',
+                'type': 'color',
+                'key': 'citrus'
+            } in actual
+        )
+        self.assertTrue(
+            {
+                'source': 'content',
+                'type': 'style',
+                'key': 'high heels'
+            } in actual
+        )
+
+    def test_Single(self):
+        target = Target()
+        actual = target.unique_matches(
+            [
+                {
+                    'found_item': [
+                        {
+                            'display_name': 'high heels',
+                            'key': 'high heels',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'style'
+                        }
+                    ],
+                    'start': 10,
+                    'end': 16,
+                    'term': 'high heels',
+                    'tokens': ['high heels']
+                }
+            ]
+        )
+        self.assertListEqual(
+            actual,
+            [
+                {
+                    'source': 'content',
+                    'type': 'style',
+                    'key': 'high heels'
+                }
+            ]
+        )
+
+    def test_multiple_alias(self):
+        target = Target()
+        actual = target.unique_matches(
+            [
+                {
+                    'found_item': [
+                        {
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'color'
+                        },
+                        {
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'style'
+                        }
+                    ],
+                    'start': 0,
+                    'end': 6,
+                    'term': 'citrus',
+                    'tokens': ['citrus']
+                },
+                {
+                    'found_item': [
+                        {
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'color'
+                        }
+                    ],
+                    'start': 10,
+                    'end': 16,
+                    'term': 'citrus',
+                    'tokens': ['citrus']
+                },
+                {
+                    'found_item': [
+                        {
+                            'display_name': 'high heels',
+                            'key': 'high heels',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'style'
+                        }
+                    ],
+                    'start': 10,
+                    'end': 16,
+                    'term': 'high heels',
+                    'tokens': ['high heels']
+                }
+            ]
+        )
+
+        self.assertEqual(
+            len(actual),
+            3
+        )
+        self.assertTrue(
+            {
+                'source': 'content',
+                'type': 'color',
+                'key': 'citrus'
+            } in actual
+        )
+        self.assertTrue(
+            {
+                'source': 'content',
+                'type': 'style',
+                'key': 'citrus'
+            } in actual
+        )
+        self.assertTrue(
+            {
+                'source': 'content',
+                'type': 'style',
+                'key': 'high heels'
+            } in actual
+        )
+
+    def test_mix_spelling_alias(self):
+        target = Target()
+        actual = target.unique_matches(
+            [
+                {
+                    'found_item': [
+                        {
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'color'
+                        }
+                    ],
+                    'start': 0,
+                    'end': 6,
+                    'term': 'citrus',
+                    'tokens': ['citrus']
+                },
+                {
+                    'found_item': [
+                        {
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'spelling',
+                            'source': 'content',
+                            'type': 'color'
+                        }
+                    ],
+                    'start': 10,
+                    'end': 16,
+                    'term': 'citrus',
+                    'tokens': ['citrus']
+                },
+                {
+                    'found_item': [
+                        {
+                            'display_name': 'high heels',
+                            'key': 'high heels',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'style'
+                        }
+                    ],
+                    'start': 10,
+                    'end': 16,
+                    'term': 'high heels',
+                    'tokens': ['high heels']
+                }
+            ]
+        )
+
+        self.assertEqual(
+            len(actual),
+            2
+        )
+        self.assertTrue(
+            {
+                'source': 'content',
+                'type': 'color',
+                'key': 'citrus'
+            } in actual
+        )
+        self.assertTrue(
+            {
+                'source': 'content',
+                'type': 'style',
+                'key': 'high heels'
+            } in actual
+        )
 
 
 class autocorrect_query_Tests(unittest.TestCase):
@@ -10,17 +344,17 @@ class autocorrect_query_Tests(unittest.TestCase):
     def test_single_mistake(self):
         target = Target()
         actual = target.autocorrect_query(
-            #0123456789
+            # 0123456789
             "citru",
             [
                 {
                     'found_item': [
                         {
-                           'display_name': 'citrus',
-                           'key': 'citrus',
-                           'match_type': 'spelling',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'spelling',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 0,
@@ -39,17 +373,17 @@ class autocorrect_query_Tests(unittest.TestCase):
     def test_single_mistake_with_other_words(self):
         target = Target()
         actual = target.autocorrect_query(
-            #012345678901234567890123456789
+            # 012345678901234567890123456789
             "I want citru high heels",
             [
                 {
                     'found_item': [
                         {
-                           'display_name': 'citrus',
-                           'key': 'citrus',
-                           'match_type': 'spelling',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'spelling',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 7,
@@ -60,11 +394,11 @@ class autocorrect_query_Tests(unittest.TestCase):
                 {
                     'found_item': [
                         {
-                           'display_name': 'high heels',
-                           'key': 'high heels',
-                           'match_type': 'alias',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'high heels',
+                            'key': 'high heels',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 13,
@@ -83,17 +417,17 @@ class autocorrect_query_Tests(unittest.TestCase):
     def test_multiple_mistakes_with_other_words(self):
         target = Target()
         actual = target.autocorrect_query(
-            #012345678901234567890123456789
+            # 012345678901234567890123456789
             "I want citru high hells thanks",
             [
                 {
                     'found_item': [
                         {
-                           'display_name': 'citrus',
-                           'key': 'citrus',
-                           'match_type': 'spelling',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'spelling',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 7,
@@ -104,11 +438,11 @@ class autocorrect_query_Tests(unittest.TestCase):
                 {
                     'found_item': [
                         {
-                           'display_name': 'high heels',
-                           'key': 'high heels',
-                           'match_type': 'spelling',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'high heels',
+                            'key': 'high heels',
+                            'match_type': 'spelling',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 13,
@@ -127,17 +461,17 @@ class autocorrect_query_Tests(unittest.TestCase):
     def test_multiple_mistakes_with_same_entity_no_mistake(self):
         target = Target()
         actual = target.autocorrect_query(
-            #012345678901234567890123456789
+            # 012345678901234567890123456789
             "I want citru high hells citrus thanks",
             [
                 {
                     'found_item': [
                         {
-                           'display_name': 'citrus',
-                           'key': 'citrus',
-                           'match_type': 'spelling',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'spelling',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 7,
@@ -148,11 +482,11 @@ class autocorrect_query_Tests(unittest.TestCase):
                 {
                     'found_item': [
                         {
-                           'display_name': 'high heels',
-                           'key': 'high heels',
-                           'match_type': 'spelling',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'high heels',
+                            'key': 'high heels',
+                            'match_type': 'spelling',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 13,
@@ -163,11 +497,11 @@ class autocorrect_query_Tests(unittest.TestCase):
                 {
                     'found_item': [
                         {
-                           'display_name': 'citrus',
-                           'key': 'citrus',
-                           'match_type': 'alias',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 24,
@@ -186,17 +520,17 @@ class autocorrect_query_Tests(unittest.TestCase):
     def test_no_mistakes(self):
         target = Target()
         actual = target.autocorrect_query(
-            #012345678901234567890123456789
+            # 012345678901234567890123456789
             "I want citrus high heels",
             [
                 {
                     'found_item': [
                         {
-                           'display_name': 'citrus',
-                           'key': 'citrus',
-                           'match_type': 'alias',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'citrus',
+                            'key': 'citrus',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 7,
@@ -207,11 +541,11 @@ class autocorrect_query_Tests(unittest.TestCase):
                 {
                     'found_item': [
                         {
-                           'display_name': 'high heels',
-                           'key': 'high heels',
-                           'match_type': 'alias',
-                           'source': 'content',
-                           'type': 'color'
+                            'display_name': 'high heels',
+                            'key': 'high heels',
+                            'match_type': 'alias',
+                            'source': 'content',
+                            'type': 'color'
                         }
                     ],
                     'start': 14,
@@ -258,25 +592,28 @@ class find_matches_Tests(unittest.TestCase):
             }
         )
 
-        self.assertListEqual(
+        self.assertDictEqual(
             actual,
-            [
-                {
-                    'found_item': [
-                        {
-                           'display_name': 'citrus',
-                           'key': 'citrus',
-                           'match_type': 'spelling',
-                           'source': 'content',
-                           'type': 'color'
-                        }
-                    ],
-                    'start': 0,
-                    'end': 5,
-                    'term': 'citru',
-                    'tokens': ['citru']
-                }
-            ]
+            {
+                'can_not_match': [],
+                "found": [
+                    {
+                        'found_item': [
+                            {
+                                'display_name': 'citrus',
+                                'key': 'citrus',
+                                'match_type': 'spelling',
+                                'source': 'content',
+                                'type': 'color'
+                            }
+                        ],
+                        'start': 0,
+                        'end': 5,
+                        'term': 'citru',
+                        'tokens': ['citru']
+                    }
+                ]
+            }
         )
 
 
@@ -286,8 +623,10 @@ class find_matches_Tests(unittest.TestCase):
         actual = target.find_matches(
             3,
             [
-                {'stem': 'red', 'value': 'red', 'start': 0, 'pos': 'NNP', 'end': 3, 'skip_word': False, 'stop_word': False, 'use': True},
-                {'stem': 'heel', 'value': 'heel', 'start': 4, 'pos': 'NN', 'end': 8, 'skip_word': False, 'stop_word': False, 'use': True}
+                {'stem': 'red', 'value': 'red', 'start': 0, 'pos': 'NNP', 'end': 3, 'skip_word': False,
+                 'stop_word': False, 'use': True},
+                {'stem': 'heel', 'value': 'heel', 'start': 4, 'pos': 'NN', 'end': 8, 'skip_word': False,
+                 'stop_word': False, 'use': True}
             ],
             {
                 'en': {
@@ -319,40 +658,43 @@ class find_matches_Tests(unittest.TestCase):
             }
         )
 
-        self.assertListEqual(
+        self.assertDictEqual(
             actual,
-            [
-                {
-                    'found_item': [
-                        {
-                           'display_name': 'red',
-                           'key': 'red',
-                           'match_type': 'alias',
-                           'source': 'content',
-                           'type': 'color'
-                        }
-                    ],
-                    'start': 0,
-                    'end': 3,
-                    'term': 'red',
-                    'tokens': ['red']
-                },
-                {
-                    'found_item': [
-                        {
-                           'display_name': 'heel',
-                           'key': 'heel',
-                           'match_type': 'alias',
-                           'source': 'content',
-                           'type': 'style'
-                        }
-                    ],
-                    'start': 4,
-                    'end': 8,
-                    'term': 'heel',
-                    'tokens': ['heel']
-                }
-            ]
+            {
+                "can_not_match": [],
+                "found": [
+                    {
+                        'found_item': [
+                            {
+                                'display_name': 'red',
+                                'key': 'red',
+                                'match_type': 'alias',
+                                'source': 'content',
+                                'type': 'color'
+                            }
+                        ],
+                        'start': 0,
+                        'end': 3,
+                        'term': 'red',
+                        'tokens': ['red']
+                    },
+                    {
+                        'found_item': [
+                            {
+                                'display_name': 'heel',
+                                'key': 'heel',
+                                'match_type': 'alias',
+                                'source': 'content',
+                                'type': 'style'
+                            }
+                        ],
+                        'start': 4,
+                        'end': 8,
+                        'term': 'heel',
+                        'tokens': ['heel']
+                    }
+                ]
+            }
         )
 
     def test_multiple_term(self):
@@ -393,24 +735,97 @@ class find_matches_Tests(unittest.TestCase):
             }
         )
 
-        self.assertListEqual(
+        self.assertDictEqual(
             actual,
+            {
+                "can_not_match": [],
+                "found": [
+                    {
+                        'found_item': [
+                            {
+                                'key': 'red valentino',
+                                'match_type': 'alias',
+                                'source': 'content',
+                                'type': 'brand'
+                            }
+                        ],
+                        'term': 'red valentino',
+                        'end': 13,
+                        'start': 0,
+                        'tokens': ['red', 'valentino']
+                    }
+                ]
+            }
+
+        )
+
+    def test_has_non_matches(self):
+        target = Target()
+        actual = target.find_matches(
+            3,
             [
                 {
-                    'found_item': [
-                        {
-                           'key': 'red valentino',
-                           'match_type': 'alias',
-                           'source': 'content',
-                           'type': 'brand'
-                        }
-                    ],
-                    'term': 'red valentino',
-                    'end': 13,
+                    'value': 'red',
+                    'pos': 'VBD',
+                    'stem': 'red',
+                    'stop_word': False,
+                    'use': True,
                     'start': 0,
-                    'tokens': ['red', 'valentino']
+                    'skip_word': False,
+                    'end': 3
+                },
+                {
+                    'value': 'valentino',
+                    'pos': 'VBN',
+                    'stem': 'valentino',
+                    'stop_word': False,
+                    'use': True,
+                    'start': 4,
+                    'skip_word': False,
+                    'end': 13
                 }
-            ]
+            ],
+            {
+                "en": {
+                    "red": [
+                        {"key": "red", "type": "color", "source": "content", 'match_type': 'alias'}
+                    ]
+                }
+            }
+        )
+
+        self.assertDictEqual(
+            actual,
+            {
+                "found": [
+                    {
+                        'found_item': [
+                            {
+                                'key': 'red',
+                                'match_type': 'alias',
+                                'source': 'content',
+                                'type': 'color'
+                            }
+                        ],
+                        'term': 'red',
+                        'end': 3,
+                        'start': 0,
+                        'tokens': ['red']
+                    }
+                ],
+                'can_not_match': [
+                    {
+                        'value': 'valentino',
+                        'pos': 'VBN',
+                        'stem': 'valentino',
+                        'stop_word': False,
+                        'use': True,
+                        'start': 4,
+                        'skip_word': False,
+                        'end': 13
+                    }
+                ]
+            }
         )
 
 

@@ -9,7 +9,7 @@ from detect.vocab import Vocab
 
 container = Container()
 vocab = Vocab(container=container)
-vocab.load()
+vocab.load(['en'])
 
 from detect.settings import PORT
 tornado.options.define('port', type=int, default=PORT, help='server port number (default: 9000)')

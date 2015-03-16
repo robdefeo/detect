@@ -65,8 +65,16 @@ class Parse():
             "end": end
         }
 
-    def find_matches(self, ngram_size, tokens, vocab):
-        found = []
+    def find_matches(self, ngram_size, tokens, vocab, existing=None, can_not_match=None):
+        if existing is None:
+            existing = []
+        if can_not_match is None:
+            can_not_match = []
+        res = {
+            "found": [],
+            "can_not_match": can_not_match
+        }
+
         n = min(len(tokens), ngram_size)
         for ngram in ngrams(tokens, n):
             ngram_term = " ".join(
@@ -76,19 +84,30 @@ class Parse():
             end = ngram[-1:][0]["end"]
 
             if ngram_term in vocab["en"]:
-                found.append(
-                    self.create_found_doc(
-                        ngram_term,
-                        [x["value"] for x in ngram],
-                        vocab["en"][ngram_term],
-                        start,
-                        end
+                if not any([x for x in existing if x["start"] == start and x["end"] == end]):
+                    res["found"].append(
+                        self.create_found_doc(
+                            ngram_term,
+                            [x["value"] for x in ngram],
+                            vocab["en"][ngram_term],
+                            start,
+                            end
+                        )
                     )
-                )
             elif n > 0:
-                found.extend(self.find_matches(n-1, tokens, vocab))
+                res["found"].extend(
+                    self.find_matches(
+                        n-1,
+                        tokens,
+                        vocab,
+                        existing=res["found"],
+                        can_not_match=res["can_not_match"]
+                    )["found"]
+                )
+            elif n == 0 and ngram[0]["use"] and ngram[0]["pos"][0] in ["J", "N", "V"]:
+                res["can_not_match"].append(ngram[0])
 
-        return found
+        return res
 
     def autocorrect_query(self, used_query, found_entities):
         corrected_query = used_query
@@ -104,28 +123,37 @@ class Parse():
         else:
             return None
 
-    def unique_matches(self):
-        raise Exception()
+    def unique_matches(self, found_entities):
+        flattened = [{
+            "type": x["type"],
+            "key": x["key"],
+            "source": x["source"]
+        } for entity in found_entities for x in entity["found_item"]]
+
+        return list({v['type']+v['key']:v for v in flattened}.values())
+
+    def unique_non_detections(self, can_not_match):
+        return list(set(x["value"] for x in can_not_match))
 
     def disambiguate(self, vocab, preparation_result):
         found_entities = self.find_matches(
-            [],
             3,
             preparation_result["tokens"],
             vocab
         )
 
-        unique_values = list(found_entities.values())
-        # terms_found = [x["term"] for x in unique_values]
-        terms_found = []
-        for x in found_entities.values():
-            for y in x["tokens"]:
-                terms_found.append(y)
-        unique_terms_found = list(set(terms_found))
+        autocorrected_query = self.autocorrect_query(
+            preparation_result["used_query"],
+            found_entities["found"]
+        )
 
-        not_women_shoes = [x["found_item"] for x in unique_values if not (x["found_item"]["type"] == "style" and (x["found_item"]["key"] == "shoe" or x["found_item"]["key"] == "women"))]
-        return {
-            "detections": not_women_shoes,
-            "non_detections": [x["value"] for x in preparation_result["tokens"] if x["use"] and x["value"] not in unique_terms_found and x["pos"][0] in ["J", "N"]]
+        unique_entities = self.unique_matches(found_entities["found"])
+        res = {
+            "detections": unique_entities,
+            "non_detections": self.unique_non_detections(found_entities["can_not_match"])
         }
+        if autocorrected_query:
+            res["autocorrected_query"] = autocorrected_query
+
+        return res
 
