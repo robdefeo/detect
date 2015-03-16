@@ -25,7 +25,8 @@ class Parse():
             "want"
         ]
         self.stemmer = PorterStemmer()
-        self.tokenizer = nltk.PunktWordTokenizer()
+
+        self.tokenizer = nltk.WordPunctTokenizer()
 
     def preparation(self, q):
         # used_query = q.lower().strip()
@@ -35,7 +36,7 @@ class Parse():
             "original_query": q
         }
         raw_tokens = self.tokenizer.tokenize(used_query)
-        token_spans = self.tokenizer.span_tokenize(used_query)
+        token_spans = list(self.tokenizer.span_tokenize(used_query))
         tagged_words = nltk.pos_tag(raw_tokens)
 
         result["tokens"] = []
