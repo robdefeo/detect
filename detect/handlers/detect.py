@@ -25,6 +25,9 @@ class Detect(RequestHandler):
             self.set_header('Content-Type', 'application/json')
             original_q = self.get_argument("q", None)
             session_id = self.get_argument("session_id", None)
+            skip_mongodb_log = self.get_argument("skip_mongodb_log", False)
+            skip_slack_log = self.get_argument("skip_slack_log", False)
+
             detection_id = ObjectId()
 
             app_log.info(
@@ -88,7 +91,7 @@ class Detect(RequestHandler):
                     "timestamp": date,
                     "q": original_q
                 }
-                Worker(log).start()
+                Worker(log, skip_mongodb_log, skip_slack_log).start()
 
         except Exception as e:
             app_log.error("error=%s" % e)
