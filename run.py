@@ -18,6 +18,6 @@ tornado.options.define('debug', type=bool, default=False, help='run in debug mod
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()
-    http_server = HTTPServer(Application(vocab))
+    http_server = HTTPServer(Application())
     http_server.listen(tornado.options.options.port)
     IOLoop.instance().start()

@@ -1,3 +1,4 @@
+
 __author__ = 'robdefeo'
 import tornado
 import tornado.web
@@ -6,15 +7,16 @@ from tornado.web import url
 from detect.handlers.detect import Detect
 from detect.handlers.proxy import Proxy
 from detect.handlers.status import Status
-
+from detect.handlers.refresh import Refresh
 
 class Application(tornado.web.Application):
-    def __init__(self, vocab):
+    def __init__(self):
         from detect.parse import Parse
         handlers = [
             url(r"/", Detect, dict(parse=Parse()), name="detect"),
             url(r"/proxy.html", Proxy, name="proxy"),
-            url(r"/status", Status, name="status")
+            url(r"/status", Status, name="status"),
+            url(r"/refresh", Refresh, name="refresh")
         ]
 
         settings = dict(
