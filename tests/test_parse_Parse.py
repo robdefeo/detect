@@ -1,8 +1,165 @@
+from mock import Mock
+
 __author__ = 'robdefeo'
 import unittest
-from operator import itemgetter
 from detect.parse import Parse as Target
 
+
+class disambiguate_Tests(unittest.TestCase):
+    def test_no_autocorrection(self):
+        target = Target()
+        target.find_matches = Mock()
+        target.find_matches.return_value = {
+            "found": "find_matches_found",
+            "can_not_match": "find_matches_can_not_match"
+        }
+        target.autocorrect_query = Mock()
+        target.autocorrect_query.return_value = None
+        target.unique_matches = Mock()
+        target.unique_matches.return_value = "unique_matches:return_value"
+        target.unique_non_detections = Mock()
+        target.unique_non_detections.return_value = "unique_non_detections:return_value"
+
+        actual = target.disambiguate(
+            "vocab",
+            {
+                "tokens": "preperation_result:tokens",
+                "used_query": "preperation_result:used_query"
+            }
+        )
+        self.assertEqual(
+            target.find_matches.call_count, 1
+        )
+        self.assertEqual(
+            target.find_matches.call_args_list[0][0][0],
+            3
+        )
+        self.assertEqual(
+            target.find_matches.call_args_list[0][0][1],
+            "preperation_result:tokens"
+        )
+        self.assertEqual(
+            target.find_matches.call_args_list[0][0][2],
+            'vocab'
+        )
+
+        self.assertEqual(
+            target.autocorrect_query.call_count,
+            1
+        )
+        self.assertEqual(
+            target.autocorrect_query.call_args_list[0][0][0],
+            'preperation_result:used_query'
+        )
+        self.assertEqual(
+            target.autocorrect_query.call_args_list[0][0][1],
+            'find_matches_found'
+        )
+
+        self.assertEqual(
+            target.unique_matches.call_count,
+            1
+        )
+
+        self.assertEqual(
+            target.unique_matches.call_args_list[0][0][0],
+            'find_matches_found'
+        )
+
+        self.assertEqual(
+            target.unique_non_detections.call_count,
+            1
+        )
+        self.assertEqual(
+            target.unique_non_detections.call_args_list[0][0][0],
+            'find_matches_can_not_match'
+        )
+
+        self.assertDictEqual(
+            actual,
+            {
+                'detections': 'unique_matches:return_value',
+                'non_detections': 'unique_non_detections:return_value'
+            }
+        )
+
+    def test_autocorrection(self):
+        target = Target()
+        target.find_matches = Mock()
+        target.find_matches.return_value = {
+            "found": "find_matches_found",
+            "can_not_match": "find_matches_can_not_match"
+        }
+        target.autocorrect_query = Mock()
+        target.autocorrect_query.return_value = "autocorrected_query_new_value"
+        target.unique_matches = Mock()
+        target.unique_matches.return_value = "unique_matches:return_value"
+        target.unique_non_detections = Mock()
+        target.unique_non_detections.return_value = "unique_non_detections:return_value"
+
+        actual = target.disambiguate(
+            "vocab",
+            {
+                "tokens": "preperation_result:tokens",
+                "used_query": "preperation_result:used_query"
+            }
+        )
+        self.assertEqual(
+            target.find_matches.call_count, 1
+        )
+        self.assertEqual(
+            target.find_matches.call_args_list[0][0][0],
+            3
+        )
+        self.assertEqual(
+            target.find_matches.call_args_list[0][0][1],
+            "preperation_result:tokens"
+        )
+        self.assertEqual(
+            target.find_matches.call_args_list[0][0][2],
+            'vocab'
+        )
+
+        self.assertEqual(
+            target.autocorrect_query.call_count,
+            1
+        )
+        self.assertEqual(
+            target.autocorrect_query.call_args_list[0][0][0],
+            'preperation_result:used_query'
+        )
+        self.assertEqual(
+            target.autocorrect_query.call_args_list[0][0][1],
+            'find_matches_found'
+        )
+
+        self.assertEqual(
+            target.unique_matches.call_count,
+            1
+        )
+
+        self.assertEqual(
+            target.unique_matches.call_args_list[0][0][0],
+            'find_matches_found'
+        )
+
+        self.assertEqual(
+            target.unique_non_detections.call_count,
+            1
+        )
+        self.assertEqual(
+            target.unique_non_detections.call_args_list[0][0][0],
+            'find_matches_can_not_match'
+        )
+
+        self.assertDictEqual(
+            actual,
+            {
+                'autocorrected_query': 'autocorrected_query_new_value',
+                'detections': 'unique_matches:return_value',
+                'non_detections': 'unique_non_detections:return_value'
+            }
+        )
 
 class unique_non_detections_Tests(unittest.TestCase):
     maxDiff = None

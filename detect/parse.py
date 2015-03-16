@@ -152,7 +152,7 @@ class Parse():
             "detections": unique_entities,
             "non_detections": self.unique_non_detections(found_entities["can_not_match"])
         }
-        if autocorrected_query:
+        if autocorrected_query is not None:
             res["autocorrected_query"] = autocorrected_query
 
         return res
