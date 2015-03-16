@@ -65,48 +65,48 @@ class Parse():
             "end": end
         }
 
-    def find_matches(self, ngram_size, tokens, vocab, existing=None, can_not_match=None):
-        if existing is None:
-            existing = []
+
+    def find_matches(self, ngram_size, tokens, vocab, can_not_match=None):
         if can_not_match is None:
             can_not_match = []
         res = {
-            "found": [],
+            "found": {},
             "can_not_match": can_not_match
         }
 
         n = min(len(tokens), ngram_size)
         for ngram in ngrams(tokens, n):
             ngram_term = " ".join(
-                x["value"] for x in ngram if not x["stop_word"]
+                x["value"] for x in ngram #if not x["stop_word"]
             )
             start = ngram[0]["start"]
             end = ngram[-1:][0]["end"]
 
             if ngram_term in vocab["en"]:
-                if not any([x for x in existing if x["start"] == start and x["end"] == end]):
-                    res["found"].append(
-                        self.create_found_doc(
-                            ngram_term,
-                            [x["value"] for x in ngram],
-                            vocab["en"][ngram_term],
-                            start,
-                            end
-                        )
-                    )
+                # must be copied in this way
+                key = "%s_%s" % (start, end)
+                res["found"][key] = self.create_found_doc(
+                    ngram_term,
+                    [x["value"] for x in ngram],
+                    vocab["en"][ngram_term],
+                    start,
+                    end
+                )
             elif n > 0:
-                res["found"].extend(
+                res["found"].update(
                     self.find_matches(
                         n-1,
                         tokens,
                         vocab,
-                        existing=res["found"],
                         can_not_match=res["can_not_match"]
                     )["found"]
                 )
-            elif n == 0 and ngram[0]["use"] and ngram[0]["pos"][0] in ["J", "N", "V"]:
+            elif n == 0 and ngram[0]["use"] and ngram[0]["pos"][0] in ["J", "N", "V"] and ngram[0] not in res["can_not_match"]:
                 res["can_not_match"].append(ngram[0])
 
+
+        flattened_tokens = [x for entity in res["found"].values() for x in entity["tokens"]]
+        res["can_not_match"] = [x for x in res["can_not_match"] if x["value"] not in flattened_tokens]
         return res
 
     def autocorrect_query(self, used_query, found_entities):
@@ -135,19 +135,23 @@ class Parse():
     def unique_non_detections(self, can_not_match):
         return list(set(x["value"] for x in can_not_match))
 
+    def format_found_entities(self, found):
+        return found.values()
+
     def disambiguate(self, vocab, preparation_result):
         found_entities = self.find_matches(
             3,
             preparation_result["tokens"],
             vocab
         )
+        found = self.format_found_entities(found_entities["found"])
 
         autocorrected_query = self.autocorrect_query(
             preparation_result["used_query"],
-            found_entities["found"]
+            found
         )
 
-        unique_entities = self.unique_matches(found_entities["found"])
+        unique_entities = self.unique_matches(found)
         res = {
             "detections": unique_entities,
             "non_detections": self.unique_non_detections(found_entities["can_not_match"])

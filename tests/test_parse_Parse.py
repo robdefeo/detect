@@ -19,6 +19,8 @@ class disambiguate_Tests(unittest.TestCase):
         target.unique_matches.return_value = "unique_matches:return_value"
         target.unique_non_detections = Mock()
         target.unique_non_detections.return_value = "unique_non_detections:return_value"
+        target.format_found_entities = Mock()
+        target.format_found_entities.return_value = "formated_found_entities"
 
         actual = target.disambiguate(
             "vocab",
@@ -53,7 +55,7 @@ class disambiguate_Tests(unittest.TestCase):
         )
         self.assertEqual(
             target.autocorrect_query.call_args_list[0][0][1],
-            'find_matches_found'
+            'formated_found_entities'
         )
 
         self.assertEqual(
@@ -63,7 +65,7 @@ class disambiguate_Tests(unittest.TestCase):
 
         self.assertEqual(
             target.unique_matches.call_args_list[0][0][0],
-            'find_matches_found'
+            'formated_found_entities'
         )
 
         self.assertEqual(
@@ -96,6 +98,8 @@ class disambiguate_Tests(unittest.TestCase):
         target.unique_matches.return_value = "unique_matches:return_value"
         target.unique_non_detections = Mock()
         target.unique_non_detections.return_value = "unique_non_detections:return_value"
+        target.format_found_entities = Mock()
+        target.format_found_entities.return_value = "formated_found_entities"
 
         actual = target.disambiguate(
             "vocab",
@@ -130,7 +134,7 @@ class disambiguate_Tests(unittest.TestCase):
         )
         self.assertEqual(
             target.autocorrect_query.call_args_list[0][0][1],
-            'find_matches_found'
+            'formated_found_entities'
         )
 
         self.assertEqual(
@@ -140,7 +144,7 @@ class disambiguate_Tests(unittest.TestCase):
 
         self.assertEqual(
             target.unique_matches.call_args_list[0][0][0],
-            'find_matches_found'
+            'formated_found_entities'
         )
 
         self.assertEqual(
@@ -160,6 +164,7 @@ class disambiguate_Tests(unittest.TestCase):
                 'non_detections': 'unique_non_detections:return_value'
             }
         )
+
 
 class unique_non_detections_Tests(unittest.TestCase):
     maxDiff = None
@@ -246,6 +251,7 @@ class unique_non_detections_Tests(unittest.TestCase):
             set(actual),
             set(['heel', 'citrus'])
         )
+
 
 class unique_matches_Tests(unittest.TestCase):
     maxDiff = None
@@ -719,6 +725,63 @@ class autocorrect_query_Tests(unittest.TestCase):
 class find_matches_Tests(unittest.TestCase):
     maxDiff = None
 
+    def test_miss_spelling_ngram(self):
+        target = Target()
+        actual = target.find_matches(
+            3,
+            [
+                {'skip_word': False, 'stem': 'white', 'start': 0, 'pos': 'IN', 'value': 'white', 'stop_word': False, 'use': False, 'end': 5},
+                {'skip_word': False, 'stem': 'and', 'start': 7, 'pos': 'CC', 'value': 'and', 'stop_word': True, 'use': False, 'end': 10},
+                {'skip_word': False, 'stem': 'blue', 'start': 11, 'pos': 'JJ', 'value': 'blue', 'stop_word': False, 'use': True, 'end': 15},
+                {'skip_word': False, 'stem': 'high', 'start': 16, 'pos': 'NN', 'value': 'high', 'stop_word': False, 'use': True, 'end': 20},
+                {'skip_word': False, 'stem': 'heal', 'start': 21, 'pos': 'NNS', 'value': 'heals', 'stop_word': False, 'use': True, 'end': 26}
+            ],
+            {
+                'en': {
+                    'high heals': [{'type': 'color', 'key': 'high heels', 'source': 'content', 'display_name': 'high heels',
+                               'match_type': 'spelling'}],
+                    'white': [{'type': 'color', 'key': 'white', 'source': 'content', 'display_name': 'white',
+                                'match_type': 'alias'}],
+                    'blue': [{'type': 'color', 'key': 'blue', 'source': 'content', 'display_name': 'blue',
+                             'match_type': 'alias'}]
+                }
+            }
+        )
+
+        self.assertDictEqual(
+            actual,
+            {
+                'found': {
+                    '0_5': {
+                        'start': 0,
+                        'end': 5,
+                        'found_item': [
+                            {'source': 'content', 'type': 'color', 'match_type': 'alias', 'key': 'white', 'display_name': 'white'}
+                        ],
+                        'term': 'white',
+                        'tokens': ['white']
+                    },
+                    '16_26': {
+                        'start': 16, 'end': 26,
+                        'found_item': [
+                            {'source': 'content', 'type': 'color', 'match_type': 'spelling', 'key': 'high heels', 'display_name': 'high heels'}
+                        ],
+                        'term': 'high heals', 'tokens': ['high', 'heals']
+                    },
+                    '11_15': {
+                        'start': 11, 'end': 15,
+                        'found_item': [
+                            {'source': 'content', 'type': 'color', 'match_type': 'alias', 'key': 'blue', 'display_name': 'blue'}
+                        ],
+                        'term': 'blue', 'tokens': ['blue']
+                    }
+                },
+                'can_not_match': []
+            }
+
+        )
+
+
     def test_miss_spelling(self):
         target = Target()
         actual = target.find_matches(
@@ -753,8 +816,8 @@ class find_matches_Tests(unittest.TestCase):
             actual,
             {
                 'can_not_match': [],
-                "found": [
-                    {
+                "found": {
+                    '0_5': {
                         'found_item': [
                             {
                                 'display_name': 'citrus',
@@ -769,7 +832,7 @@ class find_matches_Tests(unittest.TestCase):
                         'term': 'citru',
                         'tokens': ['citru']
                     }
-                ]
+                }
             }
         )
 
@@ -819,8 +882,8 @@ class find_matches_Tests(unittest.TestCase):
             actual,
             {
                 "can_not_match": [],
-                "found": [
-                    {
+                "found": {
+                    '0_3': {
                         'found_item': [
                             {
                                 'display_name': 'red',
@@ -835,7 +898,7 @@ class find_matches_Tests(unittest.TestCase):
                         'term': 'red',
                         'tokens': ['red']
                     },
-                    {
+                    '4_8': {
                         'found_item': [
                             {
                                 'display_name': 'heel',
@@ -850,7 +913,7 @@ class find_matches_Tests(unittest.TestCase):
                         'term': 'heel',
                         'tokens': ['heel']
                     }
-                ]
+                }
             }
         )
 
@@ -896,8 +959,8 @@ class find_matches_Tests(unittest.TestCase):
             actual,
             {
                 "can_not_match": [],
-                "found": [
-                    {
+                "found": {
+                    '0_13': {
                         'found_item': [
                             {
                                 'key': 'red valentino',
@@ -911,7 +974,7 @@ class find_matches_Tests(unittest.TestCase):
                         'start': 0,
                         'tokens': ['red', 'valentino']
                     }
-                ]
+                }
             }
 
         )
@@ -954,8 +1017,8 @@ class find_matches_Tests(unittest.TestCase):
         self.assertDictEqual(
             actual,
             {
-                "found": [
-                    {
+                "found": {
+                    '0_3': {
                         'found_item': [
                             {
                                 'key': 'red',
@@ -969,7 +1032,7 @@ class find_matches_Tests(unittest.TestCase):
                         'start': 0,
                         'tokens': ['red']
                     }
-                ],
+                },
                 'can_not_match': [
                     {
                         'value': 'valentino',

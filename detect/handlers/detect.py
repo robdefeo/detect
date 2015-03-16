@@ -73,8 +73,9 @@ class Detect(RequestHandler):
                     "non_detections": disambiguate_result["non_detections"],
                     "version": version,
                     "timestamp": date
-
                 }
+                if "autocorrected_query" in disambiguate_result:
+                    res["autocorrected_query"] = disambiguate_result["autocorrected_query"]
 
                 self.set_status(200)
                 self.finish(
@@ -91,6 +92,8 @@ class Detect(RequestHandler):
                     "timestamp": date,
                     "q": original_q
                 }
+                if "autocorrected_query" in disambiguate_result:
+                    log["autocorrected_query"] = disambiguate_result["autocorrected_query"]
                 Worker(log, skip_mongodb_log, skip_slack_log).start()
 
         except Exception as e:
