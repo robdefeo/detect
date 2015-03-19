@@ -90,12 +90,11 @@ class load_Tests(unittest.TestCase):
                     {
                         "value": "citrin",
                         "language": "fr"
-                    }
-                ],
-                "spellings": [
+                    },
                     {
                         "value": "citru",
-                        "language": "en"
+                        "language": "en",
+                        "type": "spelling"
                     }
                 ]
             }

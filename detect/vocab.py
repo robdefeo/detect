@@ -72,34 +72,19 @@ class Vocab(object):
         for attribute in attribute_data:
             for language in languages:
                 # loop aliaes
-                for alias in (x["value"] for x in attribute["aliases"] if x["language"] == language):
+                for alias_attribute in (x for x in attribute["aliases"] if x["language"] == language):
                     self.add_value(
                         new_alias_data,
                         language,
-                        alias,
+                        alias_attribute["value"],
                         self.create_value(
                             attribute["_id"]["type"],
                             attribute["_id"]["key"],
                             attribute["display_name"] if "display_name" in attribute and attribute["display_name"] else attribute["_id"]["key"],
                             "content",
-                            "alias"
+                            "alias" if "type" not in alias_attribute else alias_attribute["type"]
                         )
                     )
-
-                if "spellings" in attribute:
-                    for spelling in (x["value"] for x in attribute["spellings"] if x["language"] == language):
-                        self.add_value(
-                            new_alias_data,
-                            language,
-                            spelling,
-                            self.create_value(
-                                attribute["_id"]["type"],
-                                attribute["_id"]["key"],
-                                attribute["display_name"] if "display_name" in attribute and attribute["display_name"] else attribute["_id"]["key"],
-                                "content",
-                                "spelling"
-                            )
-                        )
 
         global alias_data
         self.add_hearts(

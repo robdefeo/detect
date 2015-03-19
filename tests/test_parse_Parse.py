@@ -730,7 +730,7 @@ class find_matches_Tests(unittest.TestCase):
         actual = target.find_matches(
             3,
             [
-                {'skip_word': False, 'stem': 'white', 'start': 0, 'pos': 'IN', 'value': 'white', 'stop_word': False, 'use': False, 'end': 5},
+                {'skip_word': False, 'stem': 'white', 'start': 0, 'pos': 'JJ', 'value': 'white', 'stop_word': False, 'use': True, 'end': 5},
                 {'skip_word': False, 'stem': 'and', 'start': 7, 'pos': 'CC', 'value': 'and', 'stop_word': True, 'use': False, 'end': 10},
                 {'skip_word': False, 'stem': 'blue', 'start': 11, 'pos': 'JJ', 'value': 'blue', 'stop_word': False, 'use': True, 'end': 15},
                 {'skip_word': False, 'stem': 'high', 'start': 16, 'pos': 'NN', 'value': 'high', 'stop_word': False, 'use': True, 'end': 20},

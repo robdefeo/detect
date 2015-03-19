@@ -4,6 +4,7 @@ from nltk.corpus import stopwords
 from nltk.util import ngrams
 from operator import itemgetter
 
+
 class Parse():
     def __init__(self):
         self.extra_stop_words = [
@@ -79,11 +80,11 @@ class Parse():
             "found": {},
             "can_not_match": can_not_match
         }
-
-        n = min(len(tokens), ngram_size)
-        for ngram in ngrams(tokens, n):
+        tokens_to_use = [x for x in tokens if x["use"]]
+        n = min(len(tokens_to_use), ngram_size)
+        for ngram in ngrams(tokens_to_use, n):
             ngram_term = " ".join(
-                x["value"] for x in ngram if x["use"]
+                x["value"] for x in ngram
             )
             start = ngram[0]["start"]
             end = ngram[-1:][0]["end"]
