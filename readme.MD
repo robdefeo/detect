@@ -44,7 +44,7 @@ Proposed
 
     "timestamp": "2015-03-17T16:23:14.706937",
     "detection_id": "550846e2bf5f60449d35a396",
-    "intent": [
+    "intents": [
         {
             "type": "include",
             "entities":[
