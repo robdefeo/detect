@@ -1,3 +1,5 @@
+from detect import __version__
+
 __author__ = 'robdefeo'
 from datetime import datetime
 
@@ -75,13 +77,12 @@ class Detect(RequestHandler):
                 preprocess_result = self.parse.preparation(original_q)
                 disambiguate_result = self.parse.disambiguate(alias_data, preprocess_result)
                 date = datetime.now().isoformat()
-                version = "1.0.0"
 
                 res = {
                     "_id": str(detection_id),
                     "detections": disambiguate_result["detections"],
                     "non_detections": disambiguate_result["non_detections"],
-                    "version": version,
+                    "version": __version__,
                     "timestamp": date
                 }
                 if "autocorrected_query" in disambiguate_result:
@@ -99,7 +100,7 @@ class Detect(RequestHandler):
                     "tokens": preprocess_result["tokens"],
                     "detections": disambiguate_result["detections"],
                     "non_detections": disambiguate_result["non_detections"],
-                    "version": version,
+                    "version": __version__,
                     "timestamp": date,
                     "q": original_q
                 }
