@@ -1,6 +1,7 @@
 __author__ = 'robdefeo'
 from tornado.web import RequestHandler, asynchronous
 from tornado.escape import json_encode
+from detect import __version__
 
 class Status(RequestHandler):
     def initialize(self):
@@ -14,5 +15,6 @@ class Status(RequestHandler):
         self.set_header('Content-Type', 'application/json')
         self.set_status(200)
         self.finish({
-            "status": "OK"
+            "status": "OK",
+            "version": __version__
         })
