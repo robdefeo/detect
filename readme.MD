@@ -1,3 +1,5 @@
+[ ![Codeship Status for jemboo/detection](https://codeship.com/projects/27075060-b927-0132-3c56-022b83805e1c/status?branch=master)](https://codeship.com/projects/71537)
+
 Basically get close to this https://wit.ai/docs/intro but better suited
 
 #Response
@@ -44,7 +46,7 @@ Proposed
 
     "timestamp": "2015-03-17T16:23:14.706937",
     "detection_id": "550846e2bf5f60449d35a396",
-    "intent": [
+    "intents": [
         {
             "type": "include",
             "entities":[
