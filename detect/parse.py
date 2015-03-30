@@ -7,6 +7,7 @@ from operator import itemgetter
 
 class Parse():
     def __init__(self):
+        self.POS_to_use = ["J", "N", "V", "R", "I"]
         self.extra_stop_words = [
             "show"
         ]
@@ -55,7 +56,7 @@ class Parse():
                 "start": token_spans[index][0],
                 "end": token_spans[index][1],
                 "pos": tagged_words[index][1],
-                "use": tagged_words[index][1][0] in ["J", "N", "V", "R"] and not stop_word and not skip_word,
+                "use": tagged_words[index][1][0] in self.POS_to_use and not stop_word and not skip_word,
                 "stem": self.stemmer.stem(lower_value),
                 "stop_word": stop_word,
                 "skip_word": skip_word
@@ -108,7 +109,7 @@ class Parse():
                         can_not_match=res["can_not_match"]
                     )["found"]
                 )
-            elif n == 0 and ngram[0]["use"] and ngram[0]["pos"][0] in ["J", "N", "V", "R"] and ngram[0] not in res["can_not_match"]:
+            elif n == 0 and ngram[0]["use"] and ngram[0]["pos"][0] in self.POS_to_use and ngram[0] not in res["can_not_match"]:
                 res["can_not_match"].append(ngram[0])
 
 
