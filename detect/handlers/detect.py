@@ -58,8 +58,7 @@ class Detect(RequestHandler):
                 self.finish(
                     json_encode({
                         "status": "error",
-                        "message": "missing param(s)",
-                        "session_id": str(session_id)
+                        "message": "missing param(s)"
                         }
                     )
                 )
@@ -68,8 +67,7 @@ class Detect(RequestHandler):
                 self.finish(
                     json_encode({
                         "status": "error",
-                        "message": "missing param(s)",
-                        "session_id": str(session_id)
+                        "message": "missing param(s)"
                         }
                     )
                 )

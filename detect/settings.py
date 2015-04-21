@@ -1,5 +1,4 @@
 __author__ = 'robdefeo'
-
 import json
 def get_env_setting(env_variable_name, default):
     if env_variable_name in os.environ:
@@ -21,3 +20,8 @@ ENABLE_MONGO_LOG = bool(int(get_env_setting("ENABLE_MONGO_LOG", 1)))
 PORT = int(get_env_setting("DETECT_PORT", 18999))
 
 SLACK_API_TOKEN = os.environ["SLACK_API_TOKEN"] if "SLACK_API_TOKEN" in os.environ else 'xoxp-2518607089-2518607091-2527958111-8f6f94'
+
+WIT_URL = "https://api.wit.ai/"
+WIT_TOKEN = "MZHO7YKTO6EUV54TGXWGK7KSYT4ATGGU"
+
+WIT_URL_VERSION = "20141022"
