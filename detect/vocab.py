@@ -19,7 +19,7 @@ class Vocab(object):
         self.LOGGER.warn("loading data")
         return self.container.data_attribute.find_for_detection(
             [
-                "color", "brand", "material", "theme", "style", "detail", "season"
+                "color", "brand", "material", "theme", "style", "detail", "season", "lob", "division"
             ]
         )
 
