@@ -14,7 +14,7 @@ class Worker(threading.Thread):
         self.session_id = session_id
         self.detection_id = detection_id
         self.tokens = tokens
-        self.detections = detections,
+        self.detections = detections
         self.non_detections = non_detections
         self.date = date
         self.query = query
