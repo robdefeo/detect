@@ -1,3 +1,4 @@
+from datetime import datetime
 from bson import ObjectId
 from tornado.escape import json_encode, json_decode, url_escape
 from tornado.httpclient import HTTPRequest, AsyncHTTPClient, HTTPClient
@@ -5,6 +6,7 @@ from tornado.log import app_log
 from tornado.web import RequestHandler, asynchronous
 from detect.settings import WIT_TOKEN, WIT_URL, WIT_URL_VERSION
 from detect import __version__
+from detect.workers.worker import Worker
 
 __author__ = 'robdefeo'
 
@@ -13,7 +15,6 @@ __author__ = 'robdefeo'
 class WitDetect(RequestHandler):
     def initialize(self, alias_data):
         self.alias_data = alias_data
-        pass
 
     def on_finish(self):
         pass
@@ -25,7 +26,7 @@ class WitDetect(RequestHandler):
         user_id = self.get_argument("user_id", None)
         session_id = self.get_argument("session_id", None)
         application_id = self.get_argument("application_id", None)
-        skip_mongodb_log = self.get_argument("skip_mongodb_log", False)
+
         skip_slack_log = self.get_argument("skip_slack_log", False)
 
         detection_id = ObjectId()
@@ -139,12 +140,10 @@ class WitDetect(RequestHandler):
 
         return ret
 
-
     def wit_call_back(self, response):
         data = json_decode(response.body)
-
         outcomes = []
-
+        date = datetime.now()
         for outcome in data["outcomes"]:
             entities = []
             for _type in outcome["entities"].keys():
@@ -166,10 +165,42 @@ class WitDetect(RequestHandler):
             )
         self.finish(
             {
-                "q": self.get_argument("q", None),
+                "q": self.q(),
                 "outcomes": outcomes,
                 "_id": data["msg_id"],
-                "version": __version__
+                "version": __version__,
+                "timestamp": date.isoformat()
             }
         )
-        pass
+
+        Worker(
+            self.user_id(),
+            self.application_id(),
+            self.session_id(),
+            ObjectId(data["msg_id"]),
+            date,
+            self.q(),
+            self.skip_mongodb_log(),
+            self.skip_slack_log(),
+            detection_type="wit",
+            outcomes=outcomes
+        ).start()
+
+    def skip_mongodb_log(self):
+        return self.get_argument("skip_mongodb_log", False)
+
+    def skip_slack_log(self):
+        return self.get_argument("skip_slack_log", False)
+
+    def q(self):
+        return self.get_argument("q", None)
+
+    def user_id(self):
+        user_id = self.get_argument("user_id", None)
+        return ObjectId(user_id) if user_id is not None else None
+
+    def session_id(self):
+        return ObjectId(self.get_argument("session_id"))
+
+    def application_id(self):
+        return ObjectId(self.get_argument("application_id"))

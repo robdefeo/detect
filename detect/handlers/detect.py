@@ -92,26 +92,29 @@ class Detect(RequestHandler):
                     json_encode(res)
                 )
 
-                log = {
-                    "_id": detection_id,
-                    "session_id": session_id,
-                    "application_id": application_id,
-                    "tokens": preprocess_result["tokens"],
-                    "detections": disambiguate_result["detections"],
-                    "non_detections": disambiguate_result["detections"],
-                    "version": __version__,
-                    "timestamp": date,
-                    "q": original_q
-                }
-                if "autocorrected_query" in disambiguate_result:
-                    log["autocorrected_query"] = disambiguate_result["autocorrected_query"]
+                # log = {
+                #     "_id": detection_id,
+                #     "session_id": session_id,
+                #     "application_id": application_id,
+                #     "tokens": preprocess_result["tokens"],
+                #     "detections": disambiguate_result["detections"],
+                #     "non_detections": disambiguate_result["detections"],
+                #     "version": __version__,
+                #     "timestamp": date,
+                #     "q": original_q
+                # }
+                # if "autocorrected_query" in disambiguate_result:
+                #     log["autocorrected_query"] = disambiguate_result["autocorrected_query"]
                 Worker(
                     ObjectId(user_id) if user_id is not None else None,
                     ObjectId(application_id),
                     ObjectId(session_id),
                     ObjectId(detection_id),
-                    preprocess_result["tokens"], disambiguate_result["detections"], disambiguate_result["non_detections"],
-                    date, original_q, skip_mongodb_log, skip_slack_log
+                    date, original_q, skip_mongodb_log, skip_slack_log,
+                    detection_type="matching",
+                    tokens=preprocess_result["tokens"],
+                    detections=disambiguate_result["detections"],
+                    non_detections=disambiguate_result["non_detections"]
                 ).start()
 
         except Exception as e:

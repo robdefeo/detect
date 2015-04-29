@@ -11,22 +11,29 @@ class Response(Data):
     LOGGER = logging.getLogger(__name__)
     collection_name = "responses"
 
-    def insert(self, user_id, application_id, session_id, detection_id, tokens, detections, non_detections, date, query):
+    def insert(self, user_id, application_id, session_id, detection_id, detection_type, date, query, tokens=None, detections=None,
+               non_detections=None, outcomes=None):
         data = {
             "_id": detection_id,
             "session_id": session_id,
             "application_id": application_id,
-            "tokens": tokens,
-            "detections": detections,
-            "non_detections": non_detections,
             "version": __version__,
             "timestamp": date.isoformat(),
-            "q": query
+            "q": query,
+            "type": detection_type
         }
+        if outcomes is not None:
+            data["outcomes"] = outcomes
+        if non_detections is not None:
+            data["non_detections"] = non_detections
+        if detections is not None:
+            data["detections"] = detections
+        if tokens is not None:
+            data["tokens"] = tokens
         if user_id is not None:
             data["user_id"] = user_id
 
-        self.collection.insert(data)
+        self.collection.insert(data, )
 
     def map_reduce_typeahead(self):
         mapper = Code("""
