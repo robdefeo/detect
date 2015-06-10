@@ -1,15 +1,17 @@
 from datetime import datetime
+
 from bson import ObjectId
 from tornado.escape import json_encode, json_decode, url_escape
-from tornado.httpclient import HTTPRequest, AsyncHTTPClient, HTTPClient
+from tornado.httpclient import HTTPRequest, AsyncHTTPClient
 from tornado.log import app_log
 from tornado.web import RequestHandler, asynchronous
+
 from detect.settings import WIT_TOKEN, WIT_URL, WIT_URL_VERSION
 from detect import __version__
 from detect.workers.worker import Worker
 
-__author__ = 'robdefeo'
 
+__author__ = 'robdefeo'
 
 
 class WitDetect(RequestHandler):
@@ -57,7 +59,7 @@ class WitDetect(RequestHandler):
                     "status": "error",
                     "message": "missing param(s)",
                     "session_id": str(session_id)
-                    }
+                }
                 )
             )
         elif not session_id:
@@ -67,7 +69,7 @@ class WitDetect(RequestHandler):
                     "status": "error",
                     "message": "missing param(s)",
                     "session_id": str(session_id)
-                    }
+                }
                 )
             )
 
@@ -98,9 +100,8 @@ class WitDetect(RequestHandler):
                 # TODO can suggest flag be used for somehthing not sure
                 # confidence = 0.8 if suggested else 0.999
                 confidence = 0.9999
-                
-                confidence *= self.type_match_score(x["type"], _type)
 
+                confidence *= self.type_match_score(x["type"], _type)
 
                 if x["match_type"] == "alias":
                     confidence *= 1
@@ -120,23 +121,29 @@ class WitDetect(RequestHandler):
         else:
             pass
 
-        sorted_disambiguations = sorted(disambiguated_outcomes, key=lambda y: y["confidence"], reverse=True)
-        ret = {
+        if not any(x for x in disambiguated_outcomes if x["key"] == key and x["type"] == _type):
+            disambiguated_outcomes.append(
+                {
+                    "key": key,
+                    "type": _type,
+                    "source": "unknown",
+                    "display_name": key,
+                    "confidence": 0.2
+                }
+            )
 
+        sorted_disambiguations = sorted(disambiguated_outcomes, key=lambda y: y["confidence"], reverse=True)
+
+        ret = {
+            "confidence": sorted_disambiguations[0]["confidence"],
+            "key": sorted_disambiguations[0]["key"],
+            "type": sorted_disambiguations[0]["type"],
+            "source": sorted_disambiguations[0]["source"],
+            "display_name": sorted_disambiguations[0]["display_name"]
         }
-        if any(sorted_disambiguations) and sorted_disambiguations[0]["confidence"] > 0.9:
-            ret["confidence"] = sorted_disambiguations[0]["confidence"]
-            ret["key"] = sorted_disambiguations[0]["key"]
-            ret["type"] = sorted_disambiguations[0]["type"]
-            ret["source"] = sorted_disambiguations[0]["source"]
-            ret["display_name"] = sorted_disambiguations[0]["display_name"]
-            if len(sorted_disambiguations) > 1:
-                ret["disambiguate"] = sorted_disambiguations[1:]
-        else:
-            ret["key"] = key
-            ret["type"] = _type
-            ret["disambiguate"] = sorted_disambiguations
-            ret["confidence"] = 0.2
+
+        if len(sorted_disambiguations) > 1:
+            ret["disambiguate"] = sorted_disambiguations[1:]
 
         return ret
 
@@ -153,7 +160,7 @@ class WitDetect(RequestHandler):
                         key = value["value"]["value"] if type(value["value"]) is dict else value["value"]
                         entity = self.disambiguate(_type, key, suggested)
 
-                        #TODO this needs to be moved somewhere else preferably a seperate service call
+                        # TODO this needs to be moved somewhere else preferably a seperate service call
                         entities.append(entity)
 
             outcomes.append(
