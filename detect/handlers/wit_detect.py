@@ -83,15 +83,19 @@ class WitDetect(RequestHandler):
             client = AsyncHTTPClient()
             client.fetch(r, callback=self.wit_call_back)
 
-    def type_match_score(self, _type_a, _type_b):
+    def type_match_score(self, _type_a, _type_b, multiple_key_matches):
         if _type_a == _type_b:
             return 1
         elif len({"lob", "division", "style"}.intersection([_type_a, _type_b])) == 2:
             return 0.999
         elif len({"lob", "division", "theme"}.intersection([_type_a, _type_b])) == 2:
             return 0.990
-        else:
+        elif len({"style", "theme"}.intersection([_type_a, _type_b])) == 2:
+            return 0.999
+        elif multiple_key_matches:
             return 0.8
+        else:
+            return 0.9
 
     def disambiguate(self, _type, key, suggested):
         disambiguated_outcomes = []
@@ -101,7 +105,7 @@ class WitDetect(RequestHandler):
                 # confidence = 0.8 if suggested else 0.999
                 confidence = 0.9999
 
-                confidence *= self.type_match_score(x["type"], _type)
+                confidence *= self.type_match_score(x["type"], _type, len(self.alias_data["en"][key]) > 1)
 
                 if x["match_type"] == "alias":
                     confidence *= 1
