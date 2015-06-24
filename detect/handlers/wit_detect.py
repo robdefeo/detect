@@ -102,8 +102,7 @@ class WitDetect(RequestHandler):
         if key in self.alias_data["en"]:
             for x in self.alias_data["en"][key]:
                 # TODO can suggest flag be used for somehthing not sure
-                # confidence = 0.8 if suggested else 0.999
-                confidence = 0.9999
+                confidence = 99.99999 # to make it out of 100
 
                 confidence *= self.type_match_score(x["type"], _type, len(self.alias_data["en"][key]) > 1)
 
@@ -132,7 +131,7 @@ class WitDetect(RequestHandler):
                     "type": _type,
                     "source": "unknown",
                     "display_name": key,
-                    "confidence": 0.2
+                    "confidence": 20.0
                 }
             )
 
