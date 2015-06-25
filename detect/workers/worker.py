@@ -39,12 +39,43 @@ class Worker(threading.Thread):
 
     def run(self):
         self.write_to_mongo()
-
-        if self.non_detections is not None and any(self.non_detections) and not self.skip_slack_log:
+        low_confidence_intents = [x for x in self.outcomes if x["confidence"] <= 20]
+        low_confidence_entities = [x for x in self.outcomes if x["entities"][0]["confidence"] <= 20]
+        if (any(low_confidence_intents) or any(low_confidence_entities)) and not self.skip_slack_log:
             slack.api_token = SLACK_API_TOKEN
+            message = "q=%s" % self.query
+            fields = []
+            for x in low_confidence_intents:
+                fields.append(
+                    {
+                        "title": "Intent",
+                        "value": {
+                            "confidence": x["confidence"],
+                            "intent": x["intent"]
+                        }
+                    }
+                )
+            for x in low_confidence_entities:
+                entity = x["entities"][0]
+                fields.append(
+                    {
+                        "title": "Entity",
+                        "value": "confidence=%s,type=%s,key=%s,source=%s" % (
+                            entity["confidence"], entity["type"], entity["key"], entity["source"]
+                        )
+                    }
+                )
             slack.chat.post_message(
                 '#failed_detections',
-                "q=%s,non_detections=%s" % (self.query, self.non_detections),
+                message,
+                attachments=[
+                    {
+                        "fallback": message,
+                        "text": message,
+                        "fields": fields,
+                        "color": "danger"
+                    }
+                ],
                 username='detection'
             )
 
