@@ -102,7 +102,7 @@ class WitDetect(RequestHandler):
         if key in self.alias_data["en"]:
             for x in self.alias_data["en"][key]:
                 # TODO can suggest flag be used for somehthing not sure
-                confidence = 99.99999 # to make it out of 100
+                confidence = 99.99999  # to make it out of 100
 
                 confidence *= self.type_match_score(x["type"], _type, len(self.alias_data["en"][key]) > 1)
 
@@ -168,7 +168,7 @@ class WitDetect(RequestHandler):
 
             outcomes.append(
                 {
-                    "confidence": outcome["confidence"],
+                    "confidence": outcome["confidence"] * 100,
                     "intent": outcome["intent"],
                     "entities": entities
                 }
