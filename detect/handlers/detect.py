@@ -187,6 +187,7 @@ class Detect(RequestHandler):
 
         self.set_status(202)
         self.set_header("Location", "/%s" % data["msg_id"])
+        self.set_header("_id", data["msg_id"])
         self.finish()
 
         Worker(
