@@ -6,6 +6,7 @@ from detect.handlers.detect import Detect
 from detect.handlers.status import Status
 from detect.handlers.refresh import Refresh
 
+
 class Application(tornado.web.Application):
     def __init__(self):
         from detect.container import Container

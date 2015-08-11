@@ -1,13 +1,13 @@
 from datetime import datetime
 
 from bson.errors import InvalidId
-from tornado.httpclient import HTTPRequest, AsyncHTTPClient
+from tornado.httpclient import HTTPRequest, AsyncHTTPClient, HTTPError
 
 from detect.settings import WIT_URL, WIT_URL_VERSION, WIT_TOKEN
 
 __author__ = 'robdefeo'
 
-from tornado.web import RequestHandler, MissingArgumentError
+from tornado.web import RequestHandler, MissingArgumentError, Finish
 from tornado.log import app_log
 from bson.objectid import ObjectId
 from tornado.escape import json_encode, url_escape, json_decode
@@ -39,16 +39,17 @@ class Detect(RequestHandler):
         app_log.info(
             "app=detection,function=detect,detection_id=%s,application_id=%s,session_id=%s,q=%s",
             detection_id,
-            self.application_id,
-            self.session_id,
+            self.application_id(),
+            self.session_id(),
             self.query()
         )
 
         if True:
+            url = "%smessage?v=%s&q=%s&msg_id=%s" % (
+                WIT_URL, WIT_URL_VERSION, url_escape(self.query()), str(detection_id)
+            )
             r = HTTPRequest(
-                "%smessage?v=%s&q=%s&msg_id=%s" % (
-                    WIT_URL, WIT_URL_VERSION, url_escape(self.query()), str(detection_id)
-                ),
+                url,
                 headers={
                     "Authorization": "Bearer %s" % WIT_TOKEN
                 }
@@ -208,6 +209,8 @@ class Detect(RequestHandler):
                 )
             )
             raise MissingArgumentError("q")
+        else:
+            return original_q
 
     def session_id(self):
         raw_session_id = self.get_argument("session_id", None)
@@ -220,6 +223,7 @@ class Detect(RequestHandler):
                 }
                 )
             )
+            raise Finish()
 
         try:
             return ObjectId(raw_session_id)
@@ -233,7 +237,7 @@ class Detect(RequestHandler):
                     }
                 )
             )
-            raise
+            raise Finish()
 
     def application_id(self):
         raw_application_id = self.get_argument("application_id", None)
@@ -247,6 +251,7 @@ class Detect(RequestHandler):
                     }
                 )
             )
+            raise Finish()
 
         try:
             return ObjectId(raw_application_id)
@@ -260,7 +265,7 @@ class Detect(RequestHandler):
                     }
                 )
             )
-            raise
+            raise Finish()
 
     def user_id(self):
         raw_user_id = self.get_argument("user_id", None)
@@ -276,4 +281,4 @@ class Detect(RequestHandler):
                     }
                 )
             )
-            raise
+            raise Finish()
