@@ -208,7 +208,7 @@ class Detect(RequestHandler):
                     }
                 )
             )
-            raise MissingArgumentError("q")
+            raise Finish()
         else:
             return original_q
 
