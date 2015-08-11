@@ -1,3 +1,5 @@
+from bson import ObjectId
+
 __author__ = 'robdefeo'
 import logging
 from detect.data.data import Data
@@ -7,11 +9,18 @@ from bson.son import SON
 from time import time
 from detect import __version__
 
+
 class Response(Data):
     LOGGER = logging.getLogger(__name__)
     collection_name = "responses"
 
-    def insert(self, user_id, application_id, session_id, detection_id, detection_type, date, query, tokens=None, detections=None,
+    def get(self, detection_id: ObjectId):
+        docs = self.collection.find({"_id": detection_id})
+
+        return next(docs, None)
+
+    def insert(self, user_id: ObjectId, application_id: ObjectId, session_id: ObjectId,
+               detection_id: ObjectId, detection_type, date, query, tokens=None, detections=None,
                non_detections=None, outcomes=None):
         data = {
             "_id": detection_id,

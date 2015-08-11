@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from bson.json_util import dumps
 from bson.errors import InvalidId
 from tornado.httpclient import HTTPRequest, AsyncHTTPClient, HTTPError
 
@@ -14,16 +14,21 @@ from tornado.escape import json_encode, url_escape, json_decode
 from tornado.web import asynchronous
 
 from detect.workers.worker import Worker
+from detect import __version__
 
 
 class Detect(RequestHandler):
     parse = None
     alias_data = None
+    data_response = None
 
     def data_received(self, chunk):
         pass
 
     def initialize(self, alias_data):
+        from detect.data.response import Response
+        self.data_response = Response()
+        self.data_response.open_connection()
         self.alias_data = alias_data
         # self.parse = parse
 
@@ -74,17 +79,20 @@ class Detect(RequestHandler):
             #     res["autocorrected_query"] = disambiguate_result["autocorrected_query"]
 
     @asynchronous
-    def get(self, *args, **kwargs):
-        # self.finish(
-        #     {
-        #         "q": self.query(),
-        #         "outcomes": outcomes,
-        #         "_id": data["msg_id"],
-        #         "version": __version__,
-        #         "timestamp": date.isoformat()
-        #     }
-        # )
-        pass
+    def get(self, detection_id, *args, **kwargs):
+        data = self.data_response.get(self.path_detection_id(detection_id))
+        self.set_header('Content-Type', 'application/json')
+        self.finish(
+            dumps(
+                {
+                    "q": data["q"],
+                    "outcomes": data["outcomes"],
+                    "_id": data["_id"],
+                    "version": data["version"],
+                    "timestamp": data["timestamp"]
+                }
+            )
+        )
 
     def type_match_score(self, _type_a, _type_b, multiple_key_matches):
         if _type_a == _type_b:
@@ -278,6 +286,21 @@ class Detect(RequestHandler):
                     {
                         "status": "error",
                         "message": "invalid param=user_id,user_id=%s" % raw_user_id
+                    }
+                )
+            )
+            raise Finish()
+
+    def path_detection_id(self, detection_id) -> ObjectId:
+        try:
+            return ObjectId(detection_id)
+        except:
+            self.set_status(412)
+            self.finish(
+                json_encode(
+                    {
+                        "status": "error",
+                        "message": "invalid param=detection_id,detection_id=%s" % detection_id
                     }
                 )
             )
