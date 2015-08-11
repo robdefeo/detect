@@ -39,14 +39,14 @@ class Detect(RequestHandler):
         app_log.info(
             "app=detection,function=detect,detection_id=%s,application_id=%s,session_id=%s,q=%s",
             detection_id,
-            self.application_id(),
-            self.session_id(),
-            self.query()
+            self.param_application_id(),
+            self.param_session_id(),
+            self.param_query()
         )
 
         if True:
             url = "%smessage?v=%s&q=%s&msg_id=%s" % (
-                WIT_URL, WIT_URL_VERSION, url_escape(self.query()), str(detection_id)
+                WIT_URL, WIT_URL_VERSION, url_escape(self.param_query()), str(detection_id)
             )
             r = HTTPRequest(
                 url,
@@ -182,21 +182,21 @@ class Detect(RequestHandler):
         self.finish()
 
         Worker(
-            self.user_id(),
-            self.application_id(),
-            self.session_id(),
+            self.param_user_id(),
+            self.param_application_id(),
+            self.param_session_id(),
             ObjectId(data["msg_id"]),
             date,
-            self.query(),
-            self.skip_slack_log(),
+            self.param_query(),
+            self.param_skip_slack_log(),
             detection_type="wit",
             outcomes=outcomes
         ).start()
 
-    def skip_slack_log(self):
+    def param_skip_slack_log(self):
         return self.get_argument("skip_slack_log", False)
 
-    def query(self):
+    def param_query(self):
         original_q = self.get_argument("q", None)
         if original_q is None:
             self.set_status(412)
@@ -212,7 +212,7 @@ class Detect(RequestHandler):
         else:
             return original_q
 
-    def session_id(self):
+    def param_session_id(self):
         raw_session_id = self.get_argument("session_id", None)
         if not raw_session_id:
             self.set_status(412)
@@ -239,7 +239,7 @@ class Detect(RequestHandler):
             )
             raise Finish()
 
-    def application_id(self):
+    def param_application_id(self):
         raw_application_id = self.get_argument("application_id", None)
         if raw_application_id is None:
             self.set_status(412)
@@ -267,7 +267,7 @@ class Detect(RequestHandler):
             )
             raise Finish()
 
-    def user_id(self):
+    def param_user_id(self):
         raw_user_id = self.get_argument("user_id", None)
         try:
             return ObjectId(raw_user_id) if raw_user_id is not None else None
