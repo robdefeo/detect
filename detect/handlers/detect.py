@@ -208,7 +208,7 @@ class Detect(RequestHandler):
     def param_query(self):
         original_q = self.get_argument("q", None)
         if original_q is None:
-            self.set_status(412)
+            self.set_status(428)
             self.finish(
                 json_encode(
                     {
@@ -224,7 +224,7 @@ class Detect(RequestHandler):
     def param_session_id(self):
         raw_session_id = self.get_argument("session_id", None)
         if not raw_session_id:
-            self.set_status(412)
+            self.set_status(428)
             self.finish(
                 json_encode({
                     "status": "error",
@@ -251,7 +251,7 @@ class Detect(RequestHandler):
     def param_application_id(self):
         raw_application_id = self.get_argument("application_id", None)
         if raw_application_id is None:
-            self.set_status(412)
+            self.set_status(428)
             self.finish(
                 json_encode(
                     {
@@ -281,7 +281,7 @@ class Detect(RequestHandler):
         try:
             return ObjectId(raw_user_id) if raw_user_id is not None else None
         except InvalidId:
-            self.set_status(412)
+            self.set_status(428)
             self.finish(
                 json_encode(
                     {
