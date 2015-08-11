@@ -1,4 +1,5 @@
 import threading
+from bson import ObjectId
 import slack
 import slack.chat
 from detect.settings import SLACK_API_TOKEN, ENABLE_MONGO_LOG
@@ -6,7 +7,7 @@ from tornado.log import app_log
 
 
 class Worker(threading.Thread):
-    def __init__(self, user_id, application_id, session_id, detection_id, date, query, skip_mongodb_log, skip_slack_log, detection_type, tokens=None, detections=None, non_detections=None, outcomes=None,  callback=None, *args, **kwargs):
+    def __init__(self, user_id: ObjectId, application_id: ObjectId, session_id: ObjectId, detection_id: ObjectId, date, query, skip_slack_log, detection_type, tokens=None, detections=None, non_detections=None, outcomes=None,  callback=None, *args, **kwargs):
         super(Worker, self).__init__(*args, **kwargs)
         self.callback = callback
         self.user_id = user_id
@@ -21,12 +22,10 @@ class Worker(threading.Thread):
         self.detection_type = detection_type
         self.outcomes = outcomes
 
-        self.skip_mongodb_log = skip_mongodb_log
         self.skip_slack_log = skip_slack_log
 
-
     def write_to_mongo(self):
-        if ENABLE_MONGO_LOG and not self.skip_mongodb_log:
+        if ENABLE_MONGO_LOG:
             from detect.data.response import Response
             data_response = Response()
             data_response.open_connection()

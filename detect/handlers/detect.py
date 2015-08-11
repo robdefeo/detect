@@ -1,132 +1,279 @@
-from detect import __version__
-
-__author__ = 'robdefeo'
 from datetime import datetime
 
-from tornado.web import RequestHandler
+from bson.errors import InvalidId
+from tornado.httpclient import HTTPRequest, AsyncHTTPClient
+
+from detect.settings import WIT_URL, WIT_URL_VERSION, WIT_TOKEN
+
+__author__ = 'robdefeo'
+
+from tornado.web import RequestHandler, MissingArgumentError
 from tornado.log import app_log
 from bson.objectid import ObjectId
-from tornado.escape import json_encode
+from tornado.escape import json_encode, url_escape, json_decode
 from tornado.web import asynchronous
 
 from detect.workers.worker import Worker
 
 
 class Detect(RequestHandler):
-    def initialize(self, parse):
-        self.parse = parse
+    parse = None
+    alias_data = None
+
+    def data_received(self, chunk):
+        pass
+
+    def initialize(self, alias_data):
+        self.alias_data = alias_data
+        # self.parse = parse
 
     def on_finish(self):
         pass
 
     @asynchronous
-    def get(self):
-        from detect.vocab import alias_data
+    def post(self, *args, **kwargs):
+        self.set_header('Content-Type', 'application/json')
 
-        try:
-            self.set_header('Content-Type', 'application/json')
-            original_q = self.get_argument("q", None)
-            user_id = self.get_argument("user_id", None)
-            session_id = self.get_argument("session_id", None)
-            application_id = self.get_argument("application_id", None)
-            skip_mongodb_log = self.get_argument("skip_mongodb_log", False)
-            skip_slack_log = self.get_argument("skip_slack_log", False)
+        detection_id = ObjectId()
 
-            detection_id = ObjectId()
+        app_log.info(
+            "app=detection,function=detect,detection_id=%s,application_id=%s,session_id=%s,q=%s",
+            detection_id,
+            self.application_id,
+            self.session_id,
+            self.query()
+        )
 
-            app_log.info(
-                "app=detection,function=detect,detection_id=%s,application_id=%s,session_id=%s,q=%s",
-                detection_id,
-                application_id,
-                session_id,
-                original_q
+        if True:
+            r = HTTPRequest(
+                "%smessage?v=%s&q=%s&msg_id=%s" % (
+                    WIT_URL, WIT_URL_VERSION, url_escape(self.query()), str(detection_id)
+                ),
+                headers={
+                    "Authorization": "Bearer %s" % WIT_TOKEN
+                }
+            )
+            client = AsyncHTTPClient()
+            client.fetch(r, callback=self.wit_call_back)
+        else:
+            pass
+            # TODO option for old style detection
+            # preprocess_result = self.parse.preparation(original_q)
+            # disambiguate_result = self.parse.disambiguate(self.alias_data, preprocess_result)
+            # date = datetime.now()
+            #
+            # res = {
+            #     "_id": str(detection_id),
+            #     "detections": disambiguate_result["detections"],
+            #     "non_detections": disambiguate_result["non_detections"],
+            #     "version": __version__,
+            #     "timestamp": date.isoformat()
+            # }
+            # if "autocorrected_query" in disambiguate_result:
+            #     res["autocorrected_query"] = disambiguate_result["autocorrected_query"]
+
+    @asynchronous
+    def get(self, *args, **kwargs):
+        # self.finish(
+        #     {
+        #         "q": self.query(),
+        #         "outcomes": outcomes,
+        #         "_id": data["msg_id"],
+        #         "version": __version__,
+        #         "timestamp": date.isoformat()
+        #     }
+        # )
+        pass
+
+    def type_match_score(self, _type_a, _type_b, multiple_key_matches):
+        if _type_a == _type_b:
+            return 1
+        elif len({"lob", "division", "style"}.intersection([_type_a, _type_b])) == 2:
+            return 0.999
+        elif len({"lob", "division", "theme"}.intersection([_type_a, _type_b])) == 2:
+            return 0.990
+        elif len({"style", "theme"}.intersection([_type_a, _type_b])) == 2:
+            return 0.999
+        elif multiple_key_matches:
+            return 0.8
+        else:
+            return 0.9
+
+    def disambiguate(self, _type, key, suggested):
+        disambiguated_outcomes = []
+        if key in self.alias_data["en"]:
+            for x in self.alias_data["en"][key]:
+                # TODO can suggest flag be used for somehthing not sure
+                confidence = 99.99999  # to make it out of 100
+
+                confidence *= self.type_match_score(x["type"], _type, len(self.alias_data["en"][key]) > 1)
+
+                if x["match_type"] == "alias":
+                    confidence *= 1
+                elif x["match_type"] == "spelling":
+                    confidence *= 0.9
+
+                disambiguated_outcomes.append(
+                    {
+                        "key": x["key"],
+                        "type": x["type"],
+                        "source": x["source"],
+                        "display_name": x["display_name"],
+                        "confidence": confidence
+                    }
+                )
+
+        else:
+            pass
+
+        if not any(x for x in disambiguated_outcomes if x["key"] == key and x["type"] == _type):
+            disambiguated_outcomes.append(
+                {
+                    "key": key,
+                    "type": _type,
+                    "source": "unknown",
+                    "display_name": key,
+                    "confidence": 20.0
+                }
             )
 
-            if original_q is None:
-                self.set_status(412)
-                self.finish(
-                    json_encode(
-                        {
-                            "status": "error",
-                            "message": "missing param=q"
-                        }
-                    )
-                )
+        sorted_disambiguations = sorted(disambiguated_outcomes, key=lambda y: y["confidence"], reverse=True)
 
-            elif not application_id:
-                self.set_status(412)
-                self.finish(
-                    json_encode({
-                        "status": "error",
-                        "message": "missing param(s)"
-                        }
-                    )
-                )
-            elif not session_id:
-                self.set_status(412)
-                self.finish(
-                    json_encode({
-                        "status": "error",
-                        "message": "missing param(s)"
-                        }
-                    )
-                )
+        ret = {
+            "confidence": sorted_disambiguations[0]["confidence"],
+            "key": sorted_disambiguations[0]["key"],
+            "type": sorted_disambiguations[0]["type"],
+            "source": sorted_disambiguations[0]["source"],
+            "display_name": sorted_disambiguations[0]["display_name"]
+        }
 
-            else:
-                preprocess_result = self.parse.preparation(original_q)
-                disambiguate_result = self.parse.disambiguate(alias_data, preprocess_result)
-                date = datetime.now()
+        if len(sorted_disambiguations) > 1:
+            ret["disambiguate"] = sorted_disambiguations[1:]
 
-                res = {
-                    "_id": str(detection_id),
-                    "detections": disambiguate_result["detections"],
-                    "non_detections": disambiguate_result["non_detections"],
-                    "version": __version__,
-                    "timestamp": date.isoformat()
+        return ret
+
+    def wit_call_back(self, response):
+        data = json_decode(response.body)
+        outcomes = []
+        date = datetime.now()
+        for outcome in data["outcomes"]:
+            entities = []
+            for _type in outcome["entities"].keys():
+                if _type not in ["polite"]:
+                    for value in outcome["entities"][_type]:
+                        suggested = value["suggested"] if "suggested" in value else False
+                        key = value["value"]["value"] if type(value["value"]) is dict else value["value"]
+                        entity = self.disambiguate(_type, key, suggested)
+
+                        # TODO this needs to be moved somewhere else preferably a seperate service call
+                        entities.append(entity)
+
+            outcomes.append(
+                {
+                    "confidence": outcome["confidence"] * 100,
+                    "intent": outcome["intent"],
+                    "entities": entities
                 }
-                if "autocorrected_query" in disambiguate_result:
-                    res["autocorrected_query"] = disambiguate_result["autocorrected_query"]
+            )
 
-                self.set_status(200)
-                self.finish(
-                    json_encode(res)
-                )
+        self.set_status(202)
+        self.set_header("Location", "/%s" % data["msg_id"])
+        self.finish()
 
-                # log = {
-                #     "_id": detection_id,
-                #     "session_id": session_id,
-                #     "application_id": application_id,
-                #     "tokens": preprocess_result["tokens"],
-                #     "detections": disambiguate_result["detections"],
-                #     "non_detections": disambiguate_result["detections"],
-                #     "version": __version__,
-                #     "timestamp": date,
-                #     "q": original_q
-                # }
-                # if "autocorrected_query" in disambiguate_result:
-                #     log["autocorrected_query"] = disambiguate_result["autocorrected_query"]
-                Worker(
-                    ObjectId(user_id) if user_id is not None else None,
-                    ObjectId(application_id),
-                    ObjectId(session_id),
-                    ObjectId(detection_id),
-                    date, original_q, skip_mongodb_log, skip_slack_log,
-                    detection_type="matching",
-                    tokens=preprocess_result["tokens"],
-                    detections=disambiguate_result["detections"],
-                    non_detections=disambiguate_result["non_detections"]
-                ).start()
+        Worker(
+            self.user_id(),
+            self.application_id(),
+            self.session_id(),
+            ObjectId(data["msg_id"]),
+            date,
+            self.query(),
+            self.skip_slack_log(),
+            detection_type="wit",
+            outcomes=outcomes
+        ).start()
 
-        except Exception as e:
-            app_log.error("error=%s" % e)
-            self.set_status(500)
+    def skip_slack_log(self):
+        return self.get_argument("skip_slack_log", False)
+
+    def query(self):
+        original_q = self.get_argument("q", None)
+        if original_q is None:
+            self.set_status(412)
             self.finish(
                 json_encode(
                     {
                         "status": "error",
-                        "exception": e
+                        "message": "missing param=q"
                     }
                 )
             )
-        finally:
-            pass
+            raise MissingArgumentError("q")
+
+    def session_id(self):
+        raw_session_id = self.get_argument("session_id", None)
+        if not raw_session_id:
+            self.set_status(412)
+            self.finish(
+                json_encode({
+                    "status": "error",
+                    "message": "missing param(s) session_id"
+                }
+                )
+            )
+
+        try:
+            return ObjectId(raw_session_id)
+        except InvalidId:
+            self.set_status(412)
+            self.finish(
+                json_encode(
+                    {
+                        "status": "error",
+                        "message": "invalid param=session_id,session_id=%s" % raw_session_id
+                    }
+                )
+            )
+            raise
+
+    def application_id(self):
+        raw_application_id = self.get_argument("application_id", None)
+        if raw_application_id is None:
+            self.set_status(412)
+            self.finish(
+                json_encode(
+                    {
+                        "status": "error",
+                        "message": "missing param(s) application_id"
+                    }
+                )
+            )
+
+        try:
+            return ObjectId(raw_application_id)
+        except InvalidId:
+            self.set_status(412)
+            self.finish(
+                json_encode(
+                    {
+                        "status": "error",
+                        "message": "invalid param=application_id,application_id=%s" % raw_application_id
+                    }
+                )
+            )
+            raise
+
+    def user_id(self):
+        raw_user_id = self.get_argument("user_id", None)
+        try:
+            return ObjectId(raw_user_id) if raw_user_id is not None else None
+        except InvalidId:
+            self.set_status(412)
+            self.finish(
+                json_encode(
+                    {
+                        "status": "error",
+                        "message": "invalid param=user_id,user_id=%s" % raw_user_id
+                    }
+                )
+            )
+            raise

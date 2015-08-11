@@ -70,6 +70,7 @@ class Vocab(object):
         new_alias_data = self.generate_empty_structure(languages)
 
         for attribute in attribute_data:
+            self.LOGGER.info("processing_atttribute,_id=%s", attribute["_id"])
             for language in languages:
                 # loop aliaes
                 for alias_attribute in (x for x in attribute["aliases"] if x["language"] == language):
