@@ -13,7 +13,7 @@ from tornado.web import asynchronous
 
 from detect.workers.worker import Worker
 from detect import __version__
-from detect.handlers.extractors import Param as ParamExtractor, Path as PathExtractor
+from detect.handlers.extractors import ParamExtractor, PathExtractor
 
 class Detect(RequestHandler):
     parse = None

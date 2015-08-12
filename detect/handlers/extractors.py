@@ -4,7 +4,7 @@ from tornado.escape import json_encode
 from tornado.web import RequestHandler, Finish
 
 
-class Path:
+class PathExtractor:
     def __init__(self, handler: RequestHandler):
         self.handler = handler
 
@@ -24,12 +24,12 @@ class Path:
             raise Finish()
 
 
-class Body:
+class BodyExtractor:
     def __init__(self, handler: RequestHandler):
         self.handler = handler
 
 
-class Param:
+class ParamExtractor:
     def __init__(self, handler: RequestHandler):
         self.handler = handler
         pass
