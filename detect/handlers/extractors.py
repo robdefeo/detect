@@ -34,7 +34,7 @@ class ParamExtractor:
         self.handler = handler
         pass
 
-    def session_id(self):
+    def session_id(self) -> ObjectId:
         raw_session_id = self.handler.get_argument("session_id", None)
         if raw_session_id is None:
             self.handler.set_status(428)
@@ -62,7 +62,7 @@ class ParamExtractor:
             )
             raise Finish()
 
-    def application_id(self):
+    def application_id(self) -> ObjectId:
         raw_application_id = self.handler.get_argument("application_id", None)
         if raw_application_id is None:
             self.handler.set_status(428)
@@ -91,7 +91,7 @@ class ParamExtractor:
             )
             raise Finish()
 
-    def user_id(self):
+    def user_id(self) -> ObjectId:
         raw_user_id = self.handler.get_argument("user_id", None)
         try:
             return ObjectId(raw_user_id) if raw_user_id is not None else None
@@ -107,7 +107,7 @@ class ParamExtractor:
             )
             raise Finish()
 
-    def query(self):
+    def query(self) -> str:
         original_q = self.handler.get_argument("q", None)
         if original_q is None:
             self.handler.set_status(428)
@@ -123,6 +123,5 @@ class ParamExtractor:
         else:
             return original_q
 
-    def skip_slack_log(self):
+    def skip_slack_log(self) -> bool:
         return self.handler.get_argument("skip_slack_log", False)
-
