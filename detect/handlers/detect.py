@@ -1,13 +1,11 @@
 from datetime import datetime
 from bson.json_util import dumps
-from bson.errors import InvalidId
-from tornado.httpclient import HTTPRequest, AsyncHTTPClient, HTTPError
+from tornado.httpclient import HTTPRequest, AsyncHTTPClient
 
 from detect.settings import WIT_URL, WIT_URL_VERSION, WIT_TOKEN
 
-__author__ = 'robdefeo'
 
-from tornado.web import RequestHandler, MissingArgumentError, Finish
+from tornado.web import RequestHandler
 from tornado.log import app_log
 from bson.objectid import ObjectId
 from tornado.escape import json_encode, url_escape, json_decode
@@ -15,12 +13,14 @@ from tornado.web import asynchronous
 
 from detect.workers.worker import Worker
 from detect import __version__
-
+from detect.handlers.extractors import Param as ParamExtractor, Path as PathExtractor
 
 class Detect(RequestHandler):
     parse = None
     alias_data = None
     data_response = None
+    param_extractor = None
+    path_extractor = None
 
     def data_received(self, chunk):
         pass
@@ -30,7 +30,8 @@ class Detect(RequestHandler):
         self.data_response = Response()
         self.data_response.open_connection()
         self.alias_data = alias_data
-        # self.parse = parse
+        self.param_extractor = ParamExtractor(self)
+        self.path_extractor = PathExtractor(self)
 
     def on_finish(self):
         pass
@@ -44,14 +45,14 @@ class Detect(RequestHandler):
         app_log.info(
             "app=detection,function=detect,detection_id=%s,application_id=%s,session_id=%s,q=%s",
             detection_id,
-            self.param_application_id(),
-            self.param_session_id(),
-            self.param_query()
+            self.param_extractor.application_id(),
+            self.param_extractor.session_id(),
+            self.param_extractor.query()
         )
 
         if True:
             url = "%smessage?v=%s&q=%s&msg_id=%s" % (
-                WIT_URL, WIT_URL_VERSION, url_escape(self.param_query()), str(detection_id)
+                WIT_URL, WIT_URL_VERSION, url_escape(self.param_extractor.query()), str(detection_id)
             )
             r = HTTPRequest(
                 url,
@@ -80,11 +81,12 @@ class Detect(RequestHandler):
 
     @asynchronous
     def get(self, detection_id, *args, **kwargs):
-        data = self.data_response.get(self.path_detection_id(detection_id))
+        data = self.data_response.get(self.path_extractor.detection_id(detection_id))
         self.set_header('Content-Type', 'application/json')
         self.finish(
             dumps(
                 {
+                    "type": data["type"],
                     "q": data["q"],
                     "outcomes": data["outcomes"],
                     "_id": data["_id"],
@@ -191,118 +193,14 @@ class Detect(RequestHandler):
         self.finish()
 
         Worker(
-            self.param_user_id(),
-            self.param_application_id(),
-            self.param_session_id(),
+            self.param_extractor.user_id(),
+            self.param_extractor.application_id(),
+            self.param_extractor.session_id(),
             ObjectId(data["msg_id"]),
             date,
-            self.param_query(),
-            self.param_skip_slack_log(),
+            self.param_extractor.query(),
+            self.param_extractor.skip_slack_log(),
             detection_type="wit",
             outcomes=outcomes
         ).start()
 
-    def param_skip_slack_log(self):
-        return self.get_argument("skip_slack_log", False)
-
-    def param_query(self):
-        original_q = self.get_argument("q", None)
-        if original_q is None:
-            self.set_status(428)
-            self.finish(
-                json_encode(
-                    {
-                        "status": "error",
-                        "message": "missing param=q"
-                    }
-                )
-            )
-            raise Finish()
-        else:
-            return original_q
-
-    def param_session_id(self):
-        raw_session_id = self.get_argument("session_id", None)
-        if not raw_session_id:
-            self.set_status(428)
-            self.finish(
-                json_encode({
-                    "status": "error",
-                    "message": "missing param(s) session_id"
-                }
-                )
-            )
-            raise Finish()
-
-        try:
-            return ObjectId(raw_session_id)
-        except InvalidId:
-            self.set_status(412)
-            self.finish(
-                json_encode(
-                    {
-                        "status": "error",
-                        "message": "invalid param=session_id,session_id=%s" % raw_session_id
-                    }
-                )
-            )
-            raise Finish()
-
-    def param_application_id(self):
-        raw_application_id = self.get_argument("application_id", None)
-        if raw_application_id is None:
-            self.set_status(428)
-            self.finish(
-                json_encode(
-                    {
-                        "status": "error",
-                        "message": "missing param(s) application_id"
-                    }
-                )
-            )
-            raise Finish()
-
-        try:
-            return ObjectId(raw_application_id)
-        except InvalidId:
-            self.set_status(412)
-            self.finish(
-                json_encode(
-                    {
-                        "status": "error",
-                        "message": "invalid param=application_id,application_id=%s" % raw_application_id
-                    }
-                )
-            )
-            raise Finish()
-
-    def param_user_id(self):
-        raw_user_id = self.get_argument("user_id", None)
-        try:
-            return ObjectId(raw_user_id) if raw_user_id is not None else None
-        except InvalidId:
-            self.set_status(428)
-            self.finish(
-                json_encode(
-                    {
-                        "status": "error",
-                        "message": "invalid param=user_id,user_id=%s" % raw_user_id
-                    }
-                )
-            )
-            raise Finish()
-
-    def path_detection_id(self, detection_id) -> ObjectId:
-        try:
-            return ObjectId(detection_id)
-        except:
-            self.set_status(412)
-            self.finish(
-                json_encode(
-                    {
-                        "status": "error",
-                        "message": "invalid param=detection_id,detection_id=%s" % detection_id
-                    }
-                )
-            )
-            raise Finish()
