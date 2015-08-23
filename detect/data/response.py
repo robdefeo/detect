@@ -12,19 +12,17 @@ from detect import __version__
 from pylru import lrucache
 
 
-cache = lrucache(DATA_CACHE_SIZE_RESPONSE)
-
-
 class Response(Data):
     LOGGER = logging.getLogger(__name__)
     collection_name = "responses"
+    cache = lrucache(DATA_CACHE_SIZE_RESPONSE)
 
     def get(self, detection_id: ObjectId):
-        if detection_id in cache:
-            return cache[detection_id]
+        if detection_id in self.cache:
+            return self.cache[detection_id]
         else:
             item = next(self.collection.find({"_id": detection_id}), None)
-            cache[detection_id] = item
+            self.cache[detection_id] = item
             return item
 
     def insert(self, user_id: ObjectId, application_id: ObjectId, session_id: ObjectId,
@@ -51,7 +49,7 @@ class Response(Data):
             data["user_id"] = user_id
 
         self.collection.insert(data)
-        cache[detection_id] = data
+        self.cache[detection_id] = data
 
     def map_reduce_typeahead(self):
         mapper = Code("""
