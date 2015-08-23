@@ -14,6 +14,7 @@ MONGODB_PORT = int(get_env_setting("DETECT_MONGODB_PORT", 27017))
 MONGODB_DB = get_env_setting("DETECT_MONGODB_DB", "detect")
 MONGODB_USER = get_env_setting("DETECT_MONGODB_USER", "detect")
 MONGODB_PASSWORD = get_env_setting("DETECT_MONGODB_PASSWORD", "jemboo")
+DATA_CACHE_SIZE_RESPONSE = 1048
 
 ENABLE_MONGO_LOG = bool(int(get_env_setting("ENABLE_MONGO_LOG", 1)))
 

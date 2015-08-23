@@ -1,4 +1,5 @@
 from bson import ObjectId
+from detect.settings import DATA_CACHE_SIZE_RESPONSE
 
 __author__ = 'robdefeo'
 import logging
@@ -8,6 +9,10 @@ from bson.code import Code
 from bson.son import SON
 from time import time
 from detect import __version__
+from pylru import lrucache
+
+
+cache = lrucache(DATA_CACHE_SIZE_RESPONSE)
 
 
 class Response(Data):
@@ -15,9 +20,12 @@ class Response(Data):
     collection_name = "responses"
 
     def get(self, detection_id: ObjectId):
-        docs = self.collection.find({"_id": detection_id})
-
-        return next(docs, None)
+        if detection_id in cache:
+            return cache[detection_id]
+        else:
+            item = next(self.collection.find({"_id": detection_id}), None)
+            cache[detection_id] = item
+            return item
 
     def insert(self, user_id: ObjectId, application_id: ObjectId, session_id: ObjectId,
                detection_id: ObjectId, detection_type, date, query, tokens=None, detections=None,
@@ -42,7 +50,8 @@ class Response(Data):
         if user_id is not None:
             data["user_id"] = user_id
 
-        self.collection.insert(data, )
+        self.collection.insert(data)
+        cache[detection_id] = data
 
     def map_reduce_typeahead(self):
         mapper = Code("""

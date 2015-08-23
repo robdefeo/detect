@@ -5,3 +5,4 @@ numpy>=1.9.0
 mock>=1.0.1
 pyslack>=0.1.0
 requests>=2.3.0
+pylru>=1.0.9
