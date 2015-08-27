@@ -1,4 +1,4 @@
-[ ![Codeship Status for jemboo/detection](https://codeship.com/projects/27075060-b927-0132-3c56-022b83805e1c/status?branch=master)](https://codeship.com/projects/71537)
+[![build status](https://ci.gitlab.com/projects/6618/status.png?ref=master)](https://ci.gitlab.com/projects/6618?ref=master)
 
 Basically get close to this https://wit.ai/docs/intro but better suited
 
