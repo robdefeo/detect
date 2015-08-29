@@ -17,9 +17,9 @@ class Application(tornado.web.Application):
         alias_data = vocab.load(['en'])
 
         handlers = [
-            url(r"/(.*)?", Detect, dict(alias_data=alias_data), name="detect"),
             url(r"/status", Status, name="status"),
-            url(r"/refresh", Refresh, name="refresh")
+            url(r"/refresh", Refresh, name="refresh"),
+            url(r"/(.*)?", Detect, dict(alias_data=alias_data), name="detect")
         ]
 
         settings = dict(
