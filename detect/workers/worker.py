@@ -24,20 +24,7 @@ class Worker(threading.Thread):
 
         self.skip_slack_log = skip_slack_log
 
-    def write_to_mongo(self):
-        if ENABLE_MONGO_LOG:
-            from detect.data.response import Response
-            data_response = Response()
-            data_response.open_connection()
-            data_response.insert(self.user_id, self.application_id, self.session_id, self.detection_id,
-                                 self.detection_type, self.date, self.query, self.tokens,
-                                 self.detections, self.non_detections, outcomes=self.outcomes)
-            data_response.close_connection()
-        else:
-            app_log.warn("Mongo is not enabled")
-
     def run(self):
-        self.write_to_mongo()
         low_confidence_intents = [x for x in self.outcomes if x["confidence"] <= 20]
         low_confidence_entities = [x for x in self.outcomes if x["entities"][0]["confidence"] <= 20]
         if (any(low_confidence_intents) or any(low_confidence_entities)) and not self.skip_slack_log:

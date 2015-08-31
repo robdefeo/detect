@@ -83,19 +83,24 @@ class Detect(RequestHandler):
     @asynchronous
     def get(self, detection_id, *args, **kwargs):
         data = self.data_response.get(self.path_extractor.detection_id(detection_id))
-        self.set_header('Content-Type', 'application/json')
-        self.finish(
-            dumps(
-                {
-                    "type": data["type"],
-                    "q": data["q"],
-                    "outcomes": data["outcomes"],
-                    "_id": data["_id"],
-                    "version": data["version"],
-                    "timestamp": data["timestamp"]
-                }
+        if data is not None:
+            self.set_header('Content-Type', 'application/json')
+            self.set_status(200)
+            self.finish(
+                dumps(
+                    {
+                        "type": data["type"],
+                        "q": data["q"],
+                        "outcomes": data["outcomes"],
+                        "_id": data["_id"],
+                        "version": data["version"],
+                        "timestamp": data["timestamp"]
+                    }
+                )
             )
-        )
+        else:
+            self.set_status(404)
+            self.finish()
 
     def type_match_score(self, _type_a, _type_b, multiple_key_matches):
         if _type_a == _type_b:
@@ -187,6 +192,17 @@ class Detect(RequestHandler):
                     "entities": entities
                 }
             )
+
+        self.data_response.insert(
+            self.param_extractor.user_id(),
+            self.param_extractor.application_id(),
+            self.param_extractor.session_id(),
+            ObjectId(data["msg_id"]),
+            "wit",
+            date,
+            self.param_extractor.query(),
+            outcomes=outcomes
+        )
 
         self.set_status(202)
         self.set_header("Location", "/%s" % data["msg_id"])
