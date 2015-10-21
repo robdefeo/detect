@@ -2,12 +2,12 @@ from mock import Mock
 
 __author__ = 'robdefeo'
 import unittest
-from detect.parse import Parse as Target
+from detect.detector import Detector as Target
 
 
-class disambiguate_Tests(unittest.TestCase):
+class detect_entities(unittest.TestCase):
     def test_no_autocorrection(self):
-        target = Target()
+        target = Target({})
         target.find_matches = Mock()
         target.find_matches.return_value = {
             "found": "find_matches_found",
@@ -15,78 +15,48 @@ class disambiguate_Tests(unittest.TestCase):
         }
         target.autocorrect_query = Mock()
         target.autocorrect_query.return_value = None
-        target.unique_matches = Mock()
-        target.unique_matches.return_value = "unique_matches:return_value"
+        target.key_matches = Mock(return_value="key_matches:return_value")
         target.unique_non_detections = Mock()
         target.unique_non_detections.return_value = "unique_non_detections:return_value"
         target.format_found_entities = Mock()
         target.format_found_entities.return_value = "formated_found_entities"
 
-        actual = target.disambiguate(
+        actual = target.detect_entities(
             "vocab",
             {
                 "tokens": "preperation_result:tokens",
                 "used_query": "preperation_result:used_query"
             }
         )
-        self.assertEqual(
-            target.find_matches.call_count, 1
-        )
-        self.assertEqual(
-            target.find_matches.call_args_list[0][0][0],
-            3
-        )
-        self.assertEqual(
-            target.find_matches.call_args_list[0][0][1],
-            "preperation_result:tokens"
-        )
+        self.assertEqual(1, target.find_matches.call_count)
+        self.assertEqual(3, target.find_matches.call_args_list[0][0][0])
+        self.assertEqual("preperation_result:tokens", target.find_matches.call_args_list[0][0][1])
         self.assertEqual(
             target.find_matches.call_args_list[0][0][2],
             'vocab'
         )
 
-        self.assertEqual(
-            target.autocorrect_query.call_count,
-            1
-        )
-        self.assertEqual(
-            target.autocorrect_query.call_args_list[0][0][0],
-            'preperation_result:used_query'
-        )
-        self.assertEqual(
-            target.autocorrect_query.call_args_list[0][0][1],
-            'formated_found_entities'
-        )
+        self.assertEqual(1, target.autocorrect_query.call_count)
+        self.assertEqual('preperation_result:used_query', target.autocorrect_query.call_args_list[0][0][0])
+        self.assertEqual('formated_found_entities', target.autocorrect_query.call_args_list[0][0][1])
 
-        self.assertEqual(
-            target.unique_matches.call_count,
-            1
-        )
+        self.assertEqual(1, target.key_matches.call_count)
 
-        self.assertEqual(
-            target.unique_matches.call_args_list[0][0][0],
-            'formated_found_entities'
-        )
+        self.assertEqual('formated_found_entities', target.key_matches.call_args_list[0][0][0])
 
-        self.assertEqual(
-            target.unique_non_detections.call_count,
-            1
-        )
-        self.assertEqual(
-            target.unique_non_detections.call_args_list[0][0][0],
-            'find_matches_can_not_match'
-        )
+        self.assertEqual(1, target.unique_non_detections.call_count)
+        self.assertEqual('find_matches_can_not_match', target.unique_non_detections.call_args_list[0][0][0])
 
         self.assertDictEqual(
-            actual,
             {
-                'detections': 'unique_matches:return_value',
+                'detections': 'key_matches:return_value',
                 'non_detections': 'unique_non_detections:return_value'
-            }
+            },
+            actual
         )
 
     def test_autocorrection(self):
-        target = Target()
+        target = Target({})
         target.find_matches = Mock()
         target.find_matches.return_value = {
             "found": "find_matches_found",
@@ -94,35 +64,23 @@ class disambiguate_Tests(unittest.TestCase):
         }
         target.autocorrect_query = Mock()
         target.autocorrect_query.return_value = "autocorrected_query_new_value"
-        target.unique_matches = Mock()
-        target.unique_matches.return_value = "unique_matches:return_value"
+        target.key_matches = Mock(return_value="key_matches:return_value")
         target.unique_non_detections = Mock()
         target.unique_non_detections.return_value = "unique_non_detections:return_value"
         target.format_found_entities = Mock()
         target.format_found_entities.return_value = "formated_found_entities"
 
-        actual = target.disambiguate(
+        actual = target.detect_entities(
             "vocab",
             {
                 "tokens": "preperation_result:tokens",
                 "used_query": "preperation_result:used_query"
             }
         )
-        self.assertEqual(
-            target.find_matches.call_count, 1
-        )
-        self.assertEqual(
-            target.find_matches.call_args_list[0][0][0],
-            3
-        )
-        self.assertEqual(
-            target.find_matches.call_args_list[0][0][1],
-            "preperation_result:tokens"
-        )
-        self.assertEqual(
-            target.find_matches.call_args_list[0][0][2],
-            'vocab'
-        )
+        self.assertEqual(1, target.find_matches.call_count)
+        self.assertEqual(3, target.find_matches.call_args_list[0][0][0])
+        self.assertEqual("preperation_result:tokens", target.find_matches.call_args_list[0][0][1])
+        self.assertEqual('vocab', target.find_matches.call_args_list[0][0][2])
 
         self.assertEqual(
             target.autocorrect_query.call_count,
@@ -138,12 +96,12 @@ class disambiguate_Tests(unittest.TestCase):
         )
 
         self.assertEqual(
-            target.unique_matches.call_count,
+            target.key_matches.call_count,
             1
         )
 
         self.assertEqual(
-            target.unique_matches.call_args_list[0][0][0],
+            target.key_matches.call_args_list[0][0][0],
             'formated_found_entities'
         )
 
@@ -160,7 +118,7 @@ class disambiguate_Tests(unittest.TestCase):
             actual,
             {
                 'autocorrected_query': 'autocorrected_query_new_value',
-                'detections': 'unique_matches:return_value',
+                'detections': 'key_matches:return_value',
                 'non_detections': 'unique_non_detections:return_value'
             }
         )
@@ -170,7 +128,7 @@ class unique_non_detections_Tests(unittest.TestCase):
     maxDiff = None
 
     def test_empty_can_not_match(self):
-        target = Target()
+        target = Target({})
         actual = target.unique_non_detections([])
 
         self.assertListEqual(
@@ -179,7 +137,7 @@ class unique_non_detections_Tests(unittest.TestCase):
         )
 
     def test_non_duplicates(self):
-        target = Target()
+        target = Target({})
         actual = target.unique_non_detections(
             [
                 {
@@ -211,7 +169,7 @@ class unique_non_detections_Tests(unittest.TestCase):
         )
 
     def test_duplicates(self):
-        target = Target()
+        target = Target({})
         actual = target.unique_non_detections(
             [
                 {
@@ -257,7 +215,7 @@ class unique_matches_Tests(unittest.TestCase):
     maxDiff = None
 
     def test_no_duplicates(self):
-        target = Target()
+        target = Target({})
         actual = target.unique_matches(
             [
                 {
@@ -313,7 +271,7 @@ class unique_matches_Tests(unittest.TestCase):
         )
 
     def test_Single(self):
-        target = Target()
+        target = Target({})
         actual = target.unique_matches(
             [
                 {
@@ -345,7 +303,7 @@ class unique_matches_Tests(unittest.TestCase):
         )
 
     def test_multiple_alias(self):
-        target = Target()
+        target = Target({})
         actual = target.unique_matches(
             [
                 {
@@ -430,7 +388,7 @@ class unique_matches_Tests(unittest.TestCase):
         )
 
     def test_mix_spelling_alias(self):
-        target = Target()
+        target = Target({})
         actual = target.unique_matches(
             [
                 {
@@ -505,7 +463,7 @@ class autocorrect_query_Tests(unittest.TestCase):
     maxDiff = None
 
     def test_single_mistake(self):
-        target = Target()
+        target = Target({})
         actual = target.autocorrect_query(
             # 0123456789
             "citru",
@@ -534,7 +492,7 @@ class autocorrect_query_Tests(unittest.TestCase):
         )
 
     def test_single_mistake_with_other_words(self):
-        target = Target()
+        target = Target({})
         actual = target.autocorrect_query(
             # 012345678901234567890123456789
             "I want citru high heels",
@@ -578,7 +536,7 @@ class autocorrect_query_Tests(unittest.TestCase):
         )
 
     def test_multiple_mistakes_with_other_words(self):
-        target = Target()
+        target = Target({})
         actual = target.autocorrect_query(
             # 012345678901234567890123456789
             "I want citru high hells thanks",
@@ -622,7 +580,7 @@ class autocorrect_query_Tests(unittest.TestCase):
         )
 
     def test_multiple_mistakes_with_same_entity_no_mistake(self):
-        target = Target()
+        target = Target({})
         actual = target.autocorrect_query(
             # 012345678901234567890123456789
             "I want citru high hells citrus thanks",
@@ -681,7 +639,7 @@ class autocorrect_query_Tests(unittest.TestCase):
         )
 
     def test_no_mistakes(self):
-        target = Target()
+        target = Target({})
         actual = target.autocorrect_query(
             # 012345678901234567890123456789
             "I want citrus high heels",
@@ -726,24 +684,30 @@ class find_matches_Tests(unittest.TestCase):
     maxDiff = None
 
     def test_miss_spelling_ngram(self):
-        target = Target()
+        target = Target({})
         actual = target.find_matches(
             3,
             [
-                {'skip_word': False, 'stem': 'white', 'start': 0, 'pos': 'JJ', 'value': 'white', 'stop_word': False, 'use': True, 'end': 5},
-                {'skip_word': False, 'stem': 'and', 'start': 7, 'pos': 'CC', 'value': 'and', 'stop_word': True, 'use': False, 'end': 10},
-                {'skip_word': False, 'stem': 'blue', 'start': 11, 'pos': 'JJ', 'value': 'blue', 'stop_word': False, 'use': True, 'end': 15},
-                {'skip_word': False, 'stem': 'high', 'start': 16, 'pos': 'NN', 'value': 'high', 'stop_word': False, 'use': True, 'end': 20},
-                {'skip_word': False, 'stem': 'heal', 'start': 21, 'pos': 'NNS', 'value': 'heals', 'stop_word': False, 'use': True, 'end': 26}
+                {'skip_word': False, 'stem': 'white', 'start': 0, 'pos': 'JJ', 'value': 'white', 'stop_word': False,
+                 'use': True, 'end': 5},
+                {'skip_word': False, 'stem': 'and', 'start': 7, 'pos': 'CC', 'value': 'and', 'stop_word': True,
+                 'use': False, 'end': 10},
+                {'skip_word': False, 'stem': 'blue', 'start': 11, 'pos': 'JJ', 'value': 'blue', 'stop_word': False,
+                 'use': True, 'end': 15},
+                {'skip_word': False, 'stem': 'high', 'start': 16, 'pos': 'NN', 'value': 'high', 'stop_word': False,
+                 'use': True, 'end': 20},
+                {'skip_word': False, 'stem': 'heal', 'start': 21, 'pos': 'NNS', 'value': 'heals', 'stop_word': False,
+                 'use': True, 'end': 26}
             ],
             {
                 'en': {
-                    'high heals': [{'type': 'color', 'key': 'high heels', 'source': 'content', 'display_name': 'high heels',
-                               'match_type': 'spelling'}],
+                    'high heals': [
+                        {'type': 'color', 'key': 'high heels', 'source': 'content', 'display_name': 'high heels',
+                         'match_type': 'spelling'}],
                     'white': [{'type': 'color', 'key': 'white', 'source': 'content', 'display_name': 'white',
-                                'match_type': 'alias'}],
+                               'match_type': 'alias'}],
                     'blue': [{'type': 'color', 'key': 'blue', 'source': 'content', 'display_name': 'blue',
-                             'match_type': 'alias'}]
+                              'match_type': 'alias'}]
                 }
             }
         )
@@ -756,7 +720,8 @@ class find_matches_Tests(unittest.TestCase):
                         'start': 0,
                         'end': 5,
                         'found_item': [
-                            {'source': 'content', 'type': 'color', 'match_type': 'alias', 'key': 'white', 'display_name': 'white'}
+                            {'source': 'content', 'type': 'color', 'match_type': 'alias', 'key': 'white',
+                             'display_name': 'white'}
                         ],
                         'term': 'white',
                         'tokens': ['white']
@@ -764,14 +729,16 @@ class find_matches_Tests(unittest.TestCase):
                     '16_26': {
                         'start': 16, 'end': 26,
                         'found_item': [
-                            {'source': 'content', 'type': 'color', 'match_type': 'spelling', 'key': 'high heels', 'display_name': 'high heels'}
+                            {'source': 'content', 'type': 'color', 'match_type': 'spelling', 'key': 'high heels',
+                             'display_name': 'high heels'}
                         ],
                         'term': 'high heals', 'tokens': ['high', 'heals']
                     },
                     '11_15': {
                         'start': 11, 'end': 15,
                         'found_item': [
-                            {'source': 'content', 'type': 'color', 'match_type': 'alias', 'key': 'blue', 'display_name': 'blue'}
+                            {'source': 'content', 'type': 'color', 'match_type': 'alias', 'key': 'blue',
+                             'display_name': 'blue'}
                         ],
                         'term': 'blue', 'tokens': ['blue']
                     }
@@ -781,9 +748,8 @@ class find_matches_Tests(unittest.TestCase):
 
         )
 
-
     def test_miss_spelling(self):
-        target = Target()
+        target = Target({})
         actual = target.find_matches(
             3,
             [
@@ -836,9 +802,8 @@ class find_matches_Tests(unittest.TestCase):
             }
         )
 
-
     def test_single_term(self):
-        target = Target()
+        target = Target({})
 
         actual = target.find_matches(
             3,
@@ -918,7 +883,7 @@ class find_matches_Tests(unittest.TestCase):
         )
 
     def test_multiple_term(self):
-        target = Target()
+        target = Target({})
         actual = target.find_matches(
             3,
             [
@@ -980,7 +945,7 @@ class find_matches_Tests(unittest.TestCase):
         )
 
     def test_has_non_matches(self):
-        target = Target()
+        target = Target({})
         actual = target.find_matches(
             3,
             [
@@ -1053,7 +1018,7 @@ class create_found_doc_Tests(unittest.TestCase):
     maxDiff = None
 
     def test_regular(self):
-        target = Target()
+        target = Target({})
         actual = target.create_found_doc(
             "terms_value",
             "tokens_value",
@@ -1078,7 +1043,7 @@ class preperation_Tests(unittest.TestCase):
     maxDiff = None
 
     def test_empty_string(self):
-        target = Target()
+        target = Target({})
         actual = target.preparation("")
         self.assertDictEqual(
             actual,
@@ -1090,7 +1055,7 @@ class preperation_Tests(unittest.TestCase):
         )
 
     def test_has_uppercase_elements(self):
-        target = Target()
+        target = Target({})
         actual = target.preparation("Red HEEL")
         self.assertDictEqual(
             actual,
@@ -1123,7 +1088,7 @@ class preperation_Tests(unittest.TestCase):
         )
 
     def test_has_stopwords(self):
-        target = Target()
+        target = Target({})
         actual = target.preparation("Shoes with red and white")
         self.assertDictEqual(
             actual,
@@ -1182,7 +1147,7 @@ class preperation_Tests(unittest.TestCase):
         )
 
     def test_has_skipwords(self):
-        target = Target()
+        target = Target({})
         actual = target.preparation("Show me anything")
         self.assertDictEqual(
             actual,

@@ -11,7 +11,12 @@ class add_value_Tests(unittest.TestCase):
         target = Target()
         acutal = {
             "en": {
-                "black": ["black"]
+                "black": [
+                    {
+                        "key": "black",
+                        "type": "color"
+                    }
+                ]
             }
         }
 
@@ -19,19 +24,36 @@ class add_value_Tests(unittest.TestCase):
             acutal,
             "en",
             "black",
-            "new_black"
+            [
+                {
+                    "key": "new_black",
+                    "type": "color"
+                }
+            ]
         )
 
         self.assertDictEqual(
-            acutal,
-            {'en': {'black': ['black', 'new_black']}}
+            {
+                'en': {
+                    'black': [
+                        {'key': 'black', 'type': 'color'},
+                        {'key': 'new_black', 'type': 'color'}
+                    ]
+                }
+            },
+            acutal
         )
 
     def test_no_value(self):
         target = Target()
         acutal = {
             "en": {
-                "black": ["black"]
+                "black": [
+                    {
+                        "key": "black",
+                        "type": "color"
+                    }
+                ]
             }
         }
 
@@ -39,17 +61,22 @@ class add_value_Tests(unittest.TestCase):
             acutal,
             "en",
             "blue",
-            "blue"
+            [
+                {
+                    "key": "blue",
+                    "type": "color"
+                }
+            ]
         )
 
         self.assertDictEqual(
-            acutal,
             {
                 'en': {
-                    'black': ['black'],
-                    'blue': ['blue']
+                    'black': [{'key': 'black', 'type': 'color'}],
+                    'blue': [{'key': 'blue', 'type': 'color'}]
                 }
-            }
+            },
+            acutal
         )
 
 

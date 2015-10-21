@@ -1,5 +1,6 @@
 __author__ = 'robdefeo'
 import logging
+
 alias_data = None
 
 
@@ -30,38 +31,55 @@ class Vocab(object):
 
         return new_alias_data
 
-    def create_value(self, value_type, key, display_name, source, match_type):
-        return {
-            "type": value_type,
-            "key": key,
-            "display_name": display_name,
-            "source": source,
-            "match_type": match_type
-        }
+    def create_values(self, value_type, key, display_name, source, match_type, related):
+        redirects = [
+            {
+                "type": x["attribute"]["type"],
+                "key": x["attribute"]["key"],
+                "display_name": "display_name",
+                "source": source,
+                "match_type": match_type
+            } for x in related if x["action"] == "redirect"] if related is not None else None
+        if redirects is None or not any(redirects):
+            return [
+                {
+                    "type": value_type,
+                    "key": key,
+                    "display_name": display_name,
+                    "source": source,
+                    "match_type": match_type
+                }
+            ]
+        else:
+            return redirects
 
-    def add_value(self, data, language, key, value):
+    def add_value(self, data, language, key, values):
         if key in data[language]:
-            data[language][key].append(value)
-            self.LOGGER.warning(
-                "multiple_ids,alias=%s,value=%s",
-                key,
-                data[language][key]
-            )
+            for x in values:
+                current_values = ["%s_%s" % (y["type"], y["key"]) for y in data[language][key]]
+                if "%s_%s" % (x["type"], x["key"]) not in current_values:
+                    data[language][key].append(x)
+                    # self.LOGGER.warning(
+                    #     "multiple_ids,alias=%s,value=%s",
+                    #     key,
+                    #     data[language][key]
+                    # )
 
         else:
-            data[language][key] = [value]
+            data[language][key] = values
 
     def add_hearts(self, data):
         self.add_value(
             data,
             "en",
             "hearts",
-            self.create_value(
+            self.create_values(
                 "interest",
                 "heart",
                 "heart",
                 "context",
-                "alias"
+                "alias",
+                None
             )
         )
 
@@ -78,12 +96,14 @@ class Vocab(object):
                         new_alias_data,
                         language,
                         alias_attribute["value"],
-                        self.create_value(
+                        self.create_values(
                             attribute["_id"]["type"],
                             attribute["_id"]["key"],
-                            attribute["display_name"] if "display_name" in attribute and attribute["display_name"] else attribute["_id"]["key"],
+                            attribute["display_name"] if "display_name" in attribute and attribute["display_name"] else
+                            attribute["_id"]["key"],
                             "content",
-                            "alias" if "type" not in alias_attribute else alias_attribute["type"]
+                            "alias" if "type" not in alias_attribute else alias_attribute["type"],
+                            attribute["related"] if "related" in attribute else None
                         )
                     )
 
@@ -93,4 +113,3 @@ class Vocab(object):
         )
         alias_data = new_alias_data
         return new_alias_data
-

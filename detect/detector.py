@@ -1,12 +1,15 @@
+from operator import itemgetter
+
 import nltk
 from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
 from nltk.util import ngrams
-from operator import itemgetter
+
+from detect.entity import EntityFactory
 
 
-class Parse():
-    def __init__(self):
+class Detector:
+    def __init__(self, alias_data):
         self.POS_to_use = ["J", "N", "V", "R", "I"]
         self.extra_stop_words = [
             "show"
@@ -32,8 +35,25 @@ class Parse():
             "want"
         ]
         self.stemmer = PorterStemmer()
-
         self.tokenizer = nltk.WordPunctTokenizer()
+        self.alias_data = alias_data
+        self.entity_factory = EntityFactory(self.alias_data)
+
+    def detect_intent(self, preperation_result):
+        return {
+            "confidence": 0.8,
+            "intent": "include"
+        }
+
+    def detect(self, q):
+        preperation_result = self.preparation(q)
+        outcome = self.detect_intent(preperation_result)
+        outcome["entities"] = []
+        entities = self.detect_entities(self.alias_data, preperation_result)
+        for x in entities["detections"]:
+            outcome["entities"].append(self.entity_factory.create(x["type"], x["key"], source=x["source"]))
+
+        return [outcome]
 
     def preparation(self, q):
         # used_query = q.lower().strip()
@@ -73,7 +93,6 @@ class Parse():
             "end": end
         }
 
-
     def find_matches(self, ngram_size, tokens, vocab, can_not_match=None):
         if can_not_match is None:
             can_not_match = []
@@ -103,15 +122,15 @@ class Parse():
             elif n > 0:
                 res["found"].update(
                     self.find_matches(
-                        n-1,
+                        n - 1,
                         tokens,
                         vocab,
                         can_not_match=res["can_not_match"]
                     )["found"]
                 )
-            elif n == 0 and ngram[0]["use"] and ngram[0]["pos"][0] in self.POS_to_use and ngram[0] not in res["can_not_match"]:
+            elif n == 0 and ngram[0]["use"] and ngram[0]["pos"][0] in self.POS_to_use and ngram[0] not in res[
+                "can_not_match"]:
                 res["can_not_match"].append(ngram[0])
-
 
         flattened_tokens = [x for entity in res["found"].values() for x in entity["tokens"]]
         res["can_not_match"] = [x for x in res["can_not_match"] if x["value"] not in flattened_tokens]
@@ -124,21 +143,29 @@ class Parse():
         for entity in sorted(found_entities, key=itemgetter("start"), reverse=True):
             for x in [x for x in entity["found_item"] if x["match_type"] == "spelling"]:
                 corrected = True
-                corrected_query = corrected_query[0:entity["start"]] + x["display_name"] + corrected_query[entity["end"]:]
+                corrected_query = corrected_query[0:entity["start"]] + x["display_name"] + corrected_query[
+                                                                                           entity["end"]:]
 
         if corrected:
             return corrected_query
         else:
             return None
 
-    def unique_matches(self, found_entities):
-        flattened = [{
-            "type": x["type"],
-            "key": x["key"],
-            "source": x["source"]
-        } for entity in found_entities for x in entity["found_item"]]
+    def key_matches(self, found_entities):
+        return [x["found_item"][0] for x in found_entities]
 
-        return list({v['type']+v['key']:v for v in flattened}.values())
+    def unique_matches(self, found_entities):
+        # flattened = [{
+        #                  "type": x["type"],
+        #                  "key": x["key"],
+        #                  "source": x["source"]
+        #              } for entity in found_entities for x in entity["found_item"]]
+        flattened = [{
+                         "type": x["type"],
+                         "key": x["key"],
+                         "source": x["source"]
+                     } for entity in found_entities for x in entity["found_item"]]
+        return list({v['type'] + v['key']: v for v in flattened}.values())
 
     def unique_non_detections(self, can_not_match):
         return list(set(x["value"] for x in can_not_match))
@@ -146,7 +173,7 @@ class Parse():
     def format_found_entities(self, found):
         return found.values()
 
-    def disambiguate(self, vocab, preparation_result):
+    def detect_entities(self, vocab, preparation_result):
         found_entities = self.find_matches(
             3,
             preparation_result["tokens"],
@@ -158,14 +185,13 @@ class Parse():
             preparation_result["used_query"],
             found
         )
-
-        unique_entities = self.unique_matches(found)
+        key_matches = self.key_matches(found)
+        # unique_entities = self.unique_matches(found)
         res = {
-            "detections": unique_entities,
+            "detections": key_matches,
             "non_detections": self.unique_non_detections(found_entities["can_not_match"])
         }
         if autocorrected_query is not None:
             res["autocorrected_query"] = autocorrected_query
 
         return res
-
