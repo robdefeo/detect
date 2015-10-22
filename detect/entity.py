@@ -20,12 +20,11 @@ class EntityFactory:
         else:
             return 0.9
 
-    def create(self, _type, key, suggested=None, source=None):
+    def create(self, _type, key, suggested=None, source=None, confidence=99.99999):
         disambiguated_outcomes = []
         if key in self.alias_data["en"]:
             for x in self.alias_data["en"][key]:
                 # TODO can suggest flag be used for somehthing not sure
-                confidence = 99.99999  # to make it out of 100
 
                 confidence *= self.type_match_score(x["type"], _type, len(self.alias_data["en"][key]) > 1)
 

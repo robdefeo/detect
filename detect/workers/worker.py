@@ -1,13 +1,16 @@
 import threading
+
 from bson import ObjectId
 import slack
 import slack.chat
-from detect.settings import SLACK_API_TOKEN, ENABLE_MONGO_LOG
-from tornado.log import app_log
+
+from detect.settings import SLACK_API_TOKEN
 
 
 class Worker(threading.Thread):
-    def __init__(self, user_id: ObjectId, application_id: ObjectId, session_id: ObjectId, detection_id: ObjectId, date, query, skip_slack_log, detection_type, tokens=None, detections=None, non_detections=None, outcomes=None,  callback=None, *args, **kwargs):
+    def __init__(self, user_id: ObjectId, application_id: ObjectId, session_id: ObjectId, detection_id: ObjectId, date,
+                 query, skip_slack_log, detection_type, tokens=None, detections=None, non_detections=None,
+                 outcomes=None, callback=None, *args, **kwargs):
         super(Worker, self).__init__(*args, **kwargs)
         self.callback = callback
         self.user_id = user_id
@@ -26,7 +29,11 @@ class Worker(threading.Thread):
 
     def run(self):
         low_confidence_intents = [x for x in self.outcomes if x["confidence"] <= 20]
-        low_confidence_entities = [x for x in self.outcomes if x["entities"][0]["confidence"] <= 20]
+        low_confidence_entities = [
+            x for x in self.outcomes if
+            any(x["entities"]) and
+            any(y for y in x["entities"] if y["confidence"] <= 20)
+            ]
         if (any(low_confidence_intents) or any(low_confidence_entities)) and not self.skip_slack_log:
             slack.api_token = SLACK_API_TOKEN
             message = "q=%s" % self.query

@@ -5,6 +5,42 @@ import unittest
 from detect.detector import Detector as Target
 
 
+class format_found_entities(unittest.TestCase):
+    def test_remove_if_found_in_larger_string(self):
+        all_found = [
+            {'term': 'blue', 'start': 0, 'tokens': ['blue'], 'position': '0_4', 'end': 4, 'found_item': [
+                {'type': 'color', 'match_type': 'alias', 'key': 'blue', 'display_name': 'blue', 'source': 'content'}]},
+            {'term': 'heels', 'start': 10, 'tokens': ['heels'], 'position': '10_15', 'end': 15, 'found_item': [
+                {'type': 'style', 'match_type': 'alias', 'key': 'heels', 'display_name': 'display_name',
+                 'source': 'content'}]},
+            {'term': 'high heels', 'start': 5, 'tokens': ['high', 'heels'], 'position': '5_15', 'end': 15,
+             'found_item': [
+                 {'type': 'style', 'match_type': 'alias', 'key': 'high heels', 'display_name': 'display_name',
+                  'source': 'content'}]}
+        ]
+        target = Target({})
+        actual = target.format_found_entities(all_found)
+
+        self.assertListEqual(
+            [
+                {
+                    'term': 'blue', 'start': 0, 'tokens': ['blue'], 'position': '0_4', 'end': 4, 'found_item': [
+                    {'type': 'color', 'match_type': 'alias', 'key': 'blue', 'display_name': 'blue',
+                     'source': 'content'}
+                ]
+                },
+                {
+                    'term': 'high heels', 'start': 5, 'tokens': ['high', 'heels'], 'position': '5_15', 'end': 15,
+                    'found_item': [
+                        {'type': 'style', 'match_type': 'alias', 'key': 'high heels', 'display_name': 'display_name',
+                         'source': 'content'}
+                    ]
+                }
+            ],
+            actual
+        )
+
+
 class detect_entities(unittest.TestCase):
     def test_no_autocorrection(self):
         target = Target({})
@@ -713,10 +749,10 @@ class find_matches_Tests(unittest.TestCase):
         )
 
         self.assertDictEqual(
-            actual,
             {
-                'found': {
-                    '0_5': {
+                'found': [
+                    {
+                        'position': '0_5',
                         'start': 0,
                         'end': 5,
                         'found_item': [
@@ -726,25 +762,28 @@ class find_matches_Tests(unittest.TestCase):
                         'term': 'white',
                         'tokens': ['white']
                     },
-                    '16_26': {
-                        'start': 16, 'end': 26,
-                        'found_item': [
-                            {'source': 'content', 'type': 'color', 'match_type': 'spelling', 'key': 'high heels',
-                             'display_name': 'high heels'}
-                        ],
-                        'term': 'high heals', 'tokens': ['high', 'heals']
-                    },
-                    '11_15': {
+                    {
+                        'position': '11_15',
                         'start': 11, 'end': 15,
                         'found_item': [
                             {'source': 'content', 'type': 'color', 'match_type': 'alias', 'key': 'blue',
                              'display_name': 'blue'}
                         ],
                         'term': 'blue', 'tokens': ['blue']
+                    },
+                    {
+                        'position': '16_26',
+                        'start': 16, 'end': 26,
+                        'found_item': [
+                            {'source': 'content', 'type': 'color', 'match_type': 'spelling', 'key': 'high heels',
+                             'display_name': 'high heels'}
+                        ],
+                        'term': 'high heals', 'tokens': ['high', 'heals']
                     }
-                },
+                ],
                 'can_not_match': []
-            }
+            },
+            actual
 
         )
 
@@ -782,8 +821,8 @@ class find_matches_Tests(unittest.TestCase):
             actual,
             {
                 'can_not_match': [],
-                "found": {
-                    '0_5': {
+                "found": [
+                    {
                         'found_item': [
                             {
                                 'display_name': 'citrus',
@@ -793,12 +832,13 @@ class find_matches_Tests(unittest.TestCase):
                                 'type': 'color'
                             }
                         ],
+                        'position': '0_5',
                         'start': 0,
                         'end': 5,
                         'term': 'citru',
                         'tokens': ['citru']
                     }
-                }
+                ]
             }
         )
 
@@ -847,8 +887,8 @@ class find_matches_Tests(unittest.TestCase):
             actual,
             {
                 "can_not_match": [],
-                "found": {
-                    '0_3': {
+                "found": [
+                    {
                         'found_item': [
                             {
                                 'display_name': 'red',
@@ -858,12 +898,13 @@ class find_matches_Tests(unittest.TestCase):
                                 'type': 'color'
                             }
                         ],
+                        'position': '0_3',
                         'start': 0,
                         'end': 3,
                         'term': 'red',
                         'tokens': ['red']
                     },
-                    '4_8': {
+                    {
                         'found_item': [
                             {
                                 'display_name': 'heel',
@@ -873,12 +914,13 @@ class find_matches_Tests(unittest.TestCase):
                                 'type': 'style'
                             }
                         ],
+                        'position': '4_8',
                         'start': 4,
                         'end': 8,
                         'term': 'heel',
                         'tokens': ['heel']
                     }
-                }
+                ]
             }
         )
 
@@ -924,8 +966,8 @@ class find_matches_Tests(unittest.TestCase):
             actual,
             {
                 "can_not_match": [],
-                "found": {
-                    '0_13': {
+                "found": [
+                    {
                         'found_item': [
                             {
                                 'key': 'red valentino',
@@ -937,9 +979,10 @@ class find_matches_Tests(unittest.TestCase):
                         'term': 'red valentino',
                         'end': 13,
                         'start': 0,
+                        'position': '0_13',
                         'tokens': ['red', 'valentino']
                     }
-                }
+                ]
             }
 
         )
@@ -980,10 +1023,12 @@ class find_matches_Tests(unittest.TestCase):
         )
 
         self.assertDictEqual(
-            actual,
             {
-                "found": {
-                    '0_3': {
+                "found": [
+                    {
+                        'end': 3,
+                        'position': '0_3',
+                        'tokens': ['red'],
                         'found_item': [
                             {
                                 'key': 'red',
@@ -993,11 +1038,9 @@ class find_matches_Tests(unittest.TestCase):
                             }
                         ],
                         'term': 'red',
-                        'end': 3,
-                        'start': 0,
-                        'tokens': ['red']
+                        'start': 0
                     }
-                },
+                ],
                 'can_not_match': [
                     {
                         'value': 'valentino',
@@ -1010,7 +1053,8 @@ class find_matches_Tests(unittest.TestCase):
                         'end': 13
                     }
                 ]
-            }
+            },
+            actual
         )
 
 
@@ -1034,6 +1078,7 @@ class create_found_doc_Tests(unittest.TestCase):
                 "tokens": "tokens_value",
                 "found_item": "found_item_value",
                 "start": "start_value",
+                'position': 'start_value_end_value',
                 "end": "end_value"
             }
         )

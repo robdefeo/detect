@@ -41,7 +41,7 @@ class Detector:
 
     def detect_intent(self, preperation_result):
         return {
-            "confidence": 0.8,
+            "confidence": 80.0,
             "intent": "include"
         }
 
@@ -52,6 +52,9 @@ class Detector:
         entities = self.detect_entities(self.alias_data, preperation_result)
         for x in entities["detections"]:
             outcome["entities"].append(self.entity_factory.create(x["type"], x["key"], source=x["source"]))
+
+        for x in entities["non_detections"]:
+            outcome["entities"].append(self.entity_factory.create("unknown", x, confidence=10.0))
 
         return [outcome]
 
@@ -90,14 +93,15 @@ class Detector:
             "tokens": tokens,
             "found_item": found_item,
             "start": start,
-            "end": end
+            "end": end,
+            "position": "%s_%s" % (start, end)
         }
 
-    def find_matches(self, ngram_size, tokens, vocab, can_not_match=None):
+    def find_matches(self, ngram_size: int, tokens: list, vocab, can_not_match=None):
         if can_not_match is None:
             can_not_match = []
         res = {
-            "found": {},
+            "found": [],
             "can_not_match": can_not_match
         }
         tokens_to_use = [x for x in tokens if x["use"]]
@@ -112,27 +116,30 @@ class Detector:
             if ngram_term in vocab["en"]:
                 # must be copied in this way
                 key = "%s_%s" % (start, end)
-                res["found"][key] = self.create_found_doc(
+                new_doc = self.create_found_doc(
                     ngram_term,
                     [x["value"] for x in ngram],
                     vocab["en"][ngram_term],
                     start,
                     end
                 )
+                if not any(y for y in res["found"] if new_doc["position"] == y["position"]):
+                    res["found"].append(new_doc)
             elif n > 0:
-                res["found"].update(
-                    self.find_matches(
-                        n - 1,
-                        tokens,
-                        vocab,
-                        can_not_match=res["can_not_match"]
-                    )["found"]
+                new_found_items = self.find_matches(
+                    n - 1,
+                    tokens,
+                    vocab,
+                    can_not_match=res["can_not_match"]
+                )["found"]
+                res["found"].extend(
+                    [x for x in new_found_items if not any(y for y in res["found"] if x["position"] == y["position"])]
                 )
             elif n == 0 and ngram[0]["use"] and ngram[0]["pos"][0] in self.POS_to_use and ngram[0] not in res[
                 "can_not_match"]:
                 res["can_not_match"].append(ngram[0])
 
-        flattened_tokens = [x for entity in res["found"].values() for x in entity["tokens"]]
+        flattened_tokens = [x for entity in res["found"] for x in entity["tokens"]]
         res["can_not_match"] = [x for x in res["can_not_match"] if x["value"] not in flattened_tokens]
         return res
 
@@ -170,15 +177,15 @@ class Detector:
     def unique_non_detections(self, can_not_match):
         return list(set(x["value"] for x in can_not_match))
 
-    def format_found_entities(self, found):
-        return found.values()
+    def format_found_entities(self, all_found):
+        unique_items = []
+        for current_item in all_found:
+            if not any([x for x in all_found if current_item["position"] != x["position"] and current_item["start"] >= x["start"] and current_item["end"] <= x["end"]]):
+                unique_items.append(current_item)
+        return unique_items
 
     def detect_entities(self, vocab, preparation_result):
-        found_entities = self.find_matches(
-            3,
-            preparation_result["tokens"],
-            vocab
-        )
+        found_entities = self.find_matches(3, preparation_result["tokens"], vocab)
         found = self.format_found_entities(found_entities["found"])
 
         autocorrected_query = self.autocorrect_query(
