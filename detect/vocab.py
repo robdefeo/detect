@@ -107,6 +107,20 @@ class Vocab(object):
                         )
                     )
 
+        self.add_value(
+            new_alias_data,
+            "en",
+            "popular",
+            self.create_values(
+                "non_attribute",
+                "popular",
+                "popular",
+                "manual",
+                "alias",
+                None
+            )
+        )
+
         global alias_data
         self.add_hearts(
             new_alias_data
